@@ -21,6 +21,7 @@ class CustomStream(tweepy.StreamListener):
     def on_error(self, status_code):
         print(status_code)
         if status_code == 401:
+            # To prevent logging in in a loop and getting blocked
             quit()
     
 class Credentials():
@@ -28,10 +29,10 @@ class Credentials():
     def read_cred(self):
         f = open('credentials.txt', 'r')
         f_lines = f.readlines()
-        self.consumer_key = f_lines[0]
-        self.consumer_secret = f_lines[1]
-        self.access_token = f_lines[2]
-        self.access_secret = f_lines[3]
+        self.consumer_key = f_lines[0].rstrip()
+        self.consumer_secret = f_lines[1].rstrip()
+        self.access_token = f_lines[2].rstrip()
+        self.access_secret = f_lines[3].rstrip()
         
     def start_stream(self):
         # Get credentials and create api
