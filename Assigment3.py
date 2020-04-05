@@ -20,6 +20,8 @@ class CustomStream(tweepy.StreamListener):
 
     def on_error(self, status_code):
         print(status_code)
+        if status_code == 401:
+            quit()
     
 class Credentials():
 
