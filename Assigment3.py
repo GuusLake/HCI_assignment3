@@ -12,7 +12,40 @@ import time
 import queue
 import threading
 
+class CustomStream(tweepy.StreamListener):
+    
+    def on_status(self, status):
+        # Add stuff here to what to do when a tweet appears
+        print(status.text)
+
+    def on_error(self, status_code):
+        print(status_code)
+    
+class Credentials():
+
+    def read_cred(self):
+        f = open('credentials.txt', 'r')
+        f_lines = f.readlines()
+        self.consumer_key = f_lines[0]
+        self.consumer_secret = f_lines[1]
+        self.access_token = f_lines[2]
+        self.access_secret = f_lines[3]
+        
+    def start_stream(self):
+        # Get credentials and create api
+        self.read_cred()
+        self.auth = tweepy.OAuthHandler(self.consumer_key, self.consumer_secret)
+        self.auth.set_access_token(self.access_token, self.access_secret)
+        self.api = tweepy.API(self.auth)
+        
+        # start stream
+        self.stream_listener = CustomStream()
+        self.stream = tweepy.Stream(auth = self.api.auth, listener = self.stream_listener)
+        self.stream.filter(track = ['is'])
+
 def main():
+    api = Credentials()
+    api.start_stream()
 
 if __name__ == "__main__":
     main()
