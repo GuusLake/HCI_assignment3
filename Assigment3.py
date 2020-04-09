@@ -82,9 +82,9 @@ class IncomingTweets(tk.Frame):
         # Make menubar
         self.menubar = tk.Menu(self)
         self.filemenu = tk.Menu(self.menubar, tearoff=0)
-        self.filemenu.add_command(label="Load conversation", command=lambda:self.parent.destroy)
-        self.filemenu.add_command(label="Close current tab", command=lambda:self.parent.destroy)
-        self.filemenu.add_command(label="exit", command=lambda:self.parent.destroy)
+        self.filemenu.add_command(label="Load conversation", command=self.parent.destroy)
+        self.filemenu.add_command(label="Close current tab", command=self.parent.destroy)
+        self.filemenu.add_command(label="exit", command=self.parent.destroy)
         self.menubar.add_cascade(label="File", menu=self.filemenu)
         self.accountmenu = tk.Menu(self.menubar, tearoff=0)
         self.accountmenu.add_command(label="Load credentials", command=lambda:self.api.set_new_cred())
