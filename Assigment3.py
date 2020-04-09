@@ -23,7 +23,7 @@ class CustomStream(tweepy.StreamListener):
     def on_status(self, status):
         # Add stuff here to what to do when a tweet appears
         if status.in_reply_to_status_id:
-            print(status.text)
+            #print(status.text)
             self.myQueue.sendItem(status)
 
     def on_error(self, status_code):
@@ -79,7 +79,7 @@ class Credentials():
     def set_new_cred(self):
         if self.test_credentials():
             self.setup_stream()
-            threading.Thread(target=self.start_stream, daemon=True).start()
+            self.start_stream()
         else:
             messagebox.showerror('Error: Wrong Credentials', 'The credentials found in credentials.txt were not accepted by twitter. The previous credentials are being used instead.')
             
@@ -102,7 +102,7 @@ class Credentials():
         
     def start_stream(self):
         print("Starting stream...")
-        self.stream.filter(languages = self.lang, track = self.keywords)
+        threading.Thread(target=lambda: self.stream.filter(languages = self.lang, track = self.keywords), daemon=True).start()
         print("Started stream?!")
 
 class IncomingTweets(tk.Frame):
@@ -113,7 +113,7 @@ class IncomingTweets(tk.Frame):
         self.api = api
         self.queue = queue
         self.dict = dict()
-        self.after(100, check_queue)
+        threading.Thread(target=self.check_queue, daemon=True).start()
 
         # Make menubar
         self.menubar = tk.Menu(self)
@@ -156,21 +156,41 @@ class IncomingTweets(tk.Frame):
         self.yscrollbarTree.grid(row=0, column=0, sticky='nse')
         self.tree.grid(column=0, row=0, columnspan=3, sticky= 'nsew')
 
-    def check_queue():
-        try:
-            status = self.queue.getNextItem()
-            if does_convo_exist(status):
-                parent_id = status.in_reply_to_status_id
-                self.dict[parent_id]
-        except: pass
-        self.after(100, check_queue)
+    def check_queue(self):
+        while True:
+            try:
+                status = self.queue.getNextItem()
+                response = self.get_convo_stats(status)
+                if len(response[0]) > 1 and len(response[0]) <= 10 and response[1] > 1 and response[1] <= 10:
+                    self.add_convo(status)
+                print(self.dict)
+            except: pass
+            time.sleep(0.1)
     
-    def does_convo_exist(status):
-        parent = self.api.get_status(status.in_reply_to_status_id)
-        if (parent):
-            return does_convo_exist(parent)
+    def get_convo_stats(self, status):
+        parent_id = status.in_reply_to_status_id  
+        if (parent_id):
+            parent = self.api.api.get_status(parent_id)
+            author_set, turns = self.get_convo_stats(parent)
+            author_set.add(status.author.name)
+            turns += 1
+            return [author_set, turns]
         else:
-            return (status.id in self.dict.keys())
+            return [{status.author.name},1]
+
+    def add_convo(self, status):
+        parent_id = status.in_reply_to_status_id
+        if (parent_id):
+            try:
+                self.dict[parent_id][children].append(status.id)
+            except:
+                parent = self.api.api.get_status(parent_id)
+                self.add_convo(parent)
+                self.dict[parent_id][children].append(status.id)
+            self.tree.insert(parent_id, 'end', status.id, text=status.text)
+        else:
+            self.tree.insert('', 'end', status.id, text=status.text)
+        self.dict[status.id] = {'author': status.author.name, 'text': status.text, 'parent': parent_id, 'children': list()}
 
 
 def main():
