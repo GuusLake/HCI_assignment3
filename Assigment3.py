@@ -286,7 +286,7 @@ class IncomingTweets(tk.Frame):
         
     def load(self):
         ''' Loads a tweet dictionary from a .json file '''
-        filename = filedialog.askopenfilename(initialdir = os.getcwd(),title = 'Select input JSON', filetypes = [('JSON files', '.json')])
+        filename = filedialog.askopenfilename(initialdir = os.getcwd(),title = 'Select input JSON', filetypes = [('JSON files', '*.json')])
         f = open(filename, 'r')
         self.loaded = json.load(f)
         f.close()
