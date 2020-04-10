@@ -81,11 +81,9 @@ class Credentials():
         '''Tests and then sets new credentials'''
         if self.test_credentials():
             self.setup_stream()
-            print('New credentials will be used the next time the variables are set')
         
     def setup_stream(self):
         '''Sets credentials for working api'''
-        print("Setting up stream...")
         # Get credentials and create api
         self.read_cred()
         self.auth = tweepy.OAuthHandler(self.consumer_key, self.consumer_secret)
@@ -106,9 +104,7 @@ class Credentials():
                     self.lang = lang_loc.split(', ')
                     self.keywords = key_rad.split(', ')
                     self.stream.disconnect()
-                    print("Starting stream...")
                     self.stream.filter(languages = self.lang, track = self.keywords, is_async = True)
-                    print("Started stream?!")
                 except:
                     messagebox.showerror('Error: Input error', 'The given input does not meet the right format, please enter according to the given example.')
             else:
@@ -116,9 +112,7 @@ class Credentials():
                     self.lang = False
                     self.keywords = key_rad.split(', ')
                     self.stream.disconnect()
-                    print("Starting stream...")
                     self.stream.filter(track = self.keywords, is_async = True)
-                    print("Started stream?!")
                 except:
                     messagebox.showerror('Error: Input error', 'The given input does not meet the right format, please enter according to the given example. The program will continue to use the old variables')
                     
@@ -128,11 +122,8 @@ class Credentials():
                 self.location = self.geolocator.geocode(lang_loc)
                 rad = convert_to_degrees(int(key_rad))
                 self.loc = [self.location.longitude-rad, self.location.latitude-rad, self.location.longitude+rad, self.location.latitude+rad]
-                print(self.loc)
                 self.stream.disconnect()
-                print("Starting stream...")
                 self.stream.filter(locations = self.loc, is_async = True)
-                print("Starting stream...")
             except:
                 messagebox.showerror('Error: Location not found', 'The given location has not been found. The program will continue to use the old variables')
         else:
@@ -390,10 +381,6 @@ class IncomingTweets(tk.Frame):
             parent, id, text = self.treeQueueTwo.getNextItem()
             try:
                 # Try to insert item into tree
-                print("recieved tree two item")
-                print(parent)
-                print(id)
-                print(text)
                 self.tree_two.insert(parent, 'end', id, text=text)
             except:
                 # Sometimes the text isn't compatible with treeview, eg. some emojis
@@ -414,8 +401,6 @@ class IncomingTweets(tk.Frame):
     
     def process_convo(self, leaf_id, status, total_author_set, total_turns):
         ''' Recursively traces a converation to its root, checks turn and author count, and adds it if valid '''
-        #print("doing something with id:")
-        #print(status.id)
         parent_id = status.in_reply_to_status_id  
         if (parent_id):
             # If tweets has a parent, we haven't reached the root yet
@@ -454,7 +439,6 @@ class IncomingTweets(tk.Frame):
                     self.dict['leaves'][leaf_id] = branch_id
                     # Send the tweet to the tree queue, from where it will be added to the treeview
                     self.treeQueueOne.sendItem([str(branch_id)+'-'+str(turns-1), str(branch_id)+'-'+str(turns), status.text])
-                    print("found one in dict")
                     return {'author_set': author_set, 'turns': turns, 'branch_id': branch_id}
                 else:
                     # If requirements are not met, return False
