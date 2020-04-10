@@ -10,6 +10,7 @@ from tkinter import simpledialog
 from tkinter import messagebox
 import time
 import queue
+import json
 import threading
 from geopy import Nominatim
 
@@ -155,7 +156,7 @@ class IncomingTweets(tk.Frame):
         self.menubar = tk.Menu(self)
         self.filemenu = tk.Menu(self.menubar, tearoff=0)
         self.filemenu.add_command(label="Load conversation", command=exit)
-        self.filemenu.add_command(label="Save conversation", command=exit)
+        self.filemenu.add_command(label="Save conversation", command=self.save)
         self.filemenu.add_command(label="Exit", command=lambda: self.quit_program())
         self.menubar.add_cascade(label="File", menu=self.filemenu)
         self.accountmenu = tk.Menu(self.menubar, tearoff=0)
@@ -196,6 +197,12 @@ class IncomingTweets(tk.Frame):
         self.tree.configure(yscrollcommand=self.yscrollbarTree.set)
         self.yscrollbarTree.grid(row=0, column=1, sticky='nse')
         self.tree.grid(column=0, row=0, columnspan=3, sticky= 'nsew')
+    
+    def save(self):
+        f = open(self.langloc_string.get()+"-"+self.keyrad_string.get()+" "+str(self.option_value.get())+".json", 'w')
+        json_string = json.dumps(self.dict)
+        f.write(json_string)
+        f.close()
 
     def set_lan_key(self):
         self.old_loc = self.langloc_string.get()
@@ -247,21 +254,25 @@ class IncomingTweets(tk.Frame):
             # If tweets has a parent, we haven't reached the root yet
             if parent_id in self.dict['tweets']:
                 # If the parent is already in the dictionary we use the data from there
-                total_author_set = total_author_set.union(self.dict['tweets'][parent_id][author_set])
-                total_author_set.add(status.author.name)
+                author_set = set()
+                for i in self.dict['tweets'][parent_id][author_set]:
+                    author_set.add(i)
+                author_set.add(status.author.name)
+                total_author_set.union(author_set)
                 authors = len(total_author_set)
-                total_turns = total_turns + self.dict['tweets'][parent_id][turns] + 1
+                turns = self.dict['tweets'][parent_id][turns] + 1
+                total_turns += turns
                 if (authors > 1 and authors <= 10 and total_turns > 2 and total_turns <= 10):
                     # Check if convo meets author and turn requirements
-                    author_set = self.dict['tweets'][parent_id][author_set]
-                    author_set.add(status.author.name)
-                    turns = self.dict['tweets'][parent_id][turns] + 1
+                    author_list = list()
+                    for i in author_set:
+                        author_list.append(i)
                     # Add tweet to dictionary
                     self.dict['tweets'][status.id] = {
                         'author': status.author.name, 
                         'text': status.text, 
                         'parent': parent_id, 
-                        'author_set': author_set, 
+                        'author_set': author_list, 
                         'turns': turns
                     }
                     # Conversations are identified by their leaf, which carries the id for the entire convo
@@ -294,13 +305,16 @@ class IncomingTweets(tk.Frame):
                         # If the recursive function doesn't return False, the conversation is valid
                         author_set = result['author_set']
                         author_set.add(status.author.name)
+                        author_list = list()
+                        for i in author_set:
+                            author_list.append(i)
                         turns = result['turns'] + 1
                         # Add tweet to dictionary
                         self.dict['tweets'][status.id] = {
                             'author': status.author.name, 
                             'text': status.text, 
                             'parent': parent_id, 
-                            'author_set': author_set, 
+                            'author_set': author_list, 
                             'turns': turns
                         }
                         branch_id = result['branch_id']
@@ -325,7 +339,7 @@ class IncomingTweets(tk.Frame):
                     'author': status.author.name, 
                     'text': status.text, 
                     'parent': parent_id, 
-                    'author_set': {status.author.name}, 
+                    'author_set': [status.author.name], 
                     'turns': 1
                 }
                 # Create new id for converstation and add it to leaves in dict
