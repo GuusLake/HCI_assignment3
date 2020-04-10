@@ -150,6 +150,7 @@ class IncomingTweets(tk.Frame):
         self.dict = {'leaves': dict(), 'tweets': dict()}
         self.loaded = dict()
         self.sentiment = dict()
+        self.sid = SentimentIntensityAnalyzer()
         self.last_branch_id = 0
         threading.Thread(target=self.check_tweet_queue, daemon=True).start()
         self.after(10, self.check_tree_queues)
@@ -159,7 +160,7 @@ class IncomingTweets(tk.Frame):
         # Make menubar
         self.menubar = tk.Menu(self)
         self.filemenu = tk.Menu(self.menubar, tearoff=0)
-        self.filemenu.add_command(label="Load conversation", command=exit)
+        self.filemenu.add_command(label="Load conversation", command=lambda: self.load("en, nl-corona 1.json"))
         self.filemenu.add_command(label="Save conversation", command=self.save)
         self.filemenu.add_command(label="Exit", command=lambda: self.quit_program())
         self.menubar.add_cascade(label="File", menu=self.filemenu)
@@ -171,11 +172,11 @@ class IncomingTweets(tk.Frame):
         ## First Frame
         
         # Treeview with conversations
-        self.tree = ttk.Treeview(self)
-        self.yscrollbarTree = ttk.Scrollbar(self, orient='vertical', command=self.tree.yview)
-        self.tree.configure(yscrollcommand=self.yscrollbarTree.set)
-        self.yscrollbarTree.grid(row=0, column=1, sticky='nse')
-        self.tree.grid(column=0, row=0, columnspan=3, sticky= 'nsew')
+        self.tree_one = ttk.Treeview(self)
+        self.yscrollbarTreeOne = ttk.Scrollbar(self, orient='vertical', command=self.tree_one.yview)
+        self.tree_one.configure(yscrollcommand=self.yscrollbarTreeOne.set)
+        self.yscrollbarTreeOne.grid(row=0, column=1, sticky='nse')
+        self.tree_one.grid(column=0, row=0, columnspan=3, sticky= 'nse')
         
         # Input fields and buttons
         self.langloc_string = tk.StringVar()
@@ -208,13 +209,6 @@ class IncomingTweets(tk.Frame):
         
         ## Second Frame
 
-        # Treeviews with conversations
-        self.tree_one = ttk.Treeview(self)
-        self.yscrollbarTreeOne = ttk.Scrollbar(self, orient='vertical', command=self.tree_one.yview)
-        self.tree_one.configure(yscrollcommand=self.yscrollbarTreeOne.set)
-        self.yscrollbarTreeOne.grid(row=0, column=1, sticky='nse')
-        self.tree_one.grid(column=0, row=0, columnspan=3, sticky= 'nsew')
-        
         self.tree_two = ttk.Treeview(self)
         self.yscrollbarTreeTwo = ttk.Scrollbar(self, orient='vertical', command=self.tree_two.yview)
         self.tree_two.configure(yscrollcommand=self.yscrollbarTreeTwo.set)
@@ -237,15 +231,20 @@ class IncomingTweets(tk.Frame):
         
     def load(self, filename):
         f = open(filename, 'r')
-        self.loaded = json.loads(f) # DOES THIS WORK?
-        #for leaf in self.loaded['leaves']
-         #   self.load_convo(leaf, leaf, [])
+        self.loaded = json.load(f) # DOES THIS WORK?
+        for leaf in self.loaded['leaves']:
+            self.sentiment[leaf] = self.get_sentiment(leaf)
+        print(self.sentiment)
             
-    def load_convo(self, leaf_id, tweet_id, sentiments):
-        parent_id = self.loaded['tweets'][tweet_id][parent]
+    def get_sentiment(self, tweet_id):
+        parent_id = self.loaded['tweets'][str(tweet_id)]['parent']
         if parent_id:
-            
-            self.load_convo(branch_id, parent_id)
+            sentiments = self.get_sentiment(parent_id)
+        else:
+            sentiments = list()
+        ss = self.sid.polarity_scores(self.loaded['tweets'][str(tweet_id)]['text'])
+        sentiments.append({'pos': ss['pos'], 'neg': ss['neg']})
+        return sentiments
 
     def set_lan_key(self):
         self.old_loc = self.langloc_string.get()
@@ -270,10 +269,10 @@ class IncomingTweets(tk.Frame):
             parent, id, text = self.treeQueueOne.getNextItem()
             try:
                 # Try to insert item into tree
-                self.tree.insert(parent, 'end', id, text=text)
+                self.tree_one.insert(parent, 'end', id, text=text)
             except:
                 # Sometimes the text isn't compatible with treeview, eg. some emojis
-                self.tree.insert(parent, 'end', id, text="TWEET CANNOT BE DISPLAYED")
+                self.tree_one.insert(parent, 'end', id, text="TWEET CANNOT BE DISPLAYED")
         except: pass
         
         try:
@@ -281,10 +280,10 @@ class IncomingTweets(tk.Frame):
             parent, id, text = self.treeQueueTwo.getNextItem()
             try:
                 # Try to insert item into tree
-                self.tree.insert(parent, 'end', id, text=text)
+                self.tree_one.insert(parent, 'end', id, text=text)
             except:
                 # Sometimes the text isn't compatible with treeview, eg. some emojis
-                self.tree.insert(parent, 'end', id, text="TWEET CANNOT BE DISPLAYED")
+                self.tree_one.insert(parent, 'end', id, text="TWEET CANNOT BE DISPLAYED")
         except: pass
         self.after(10, self.check_tree_queues)
         
@@ -340,7 +339,7 @@ class IncomingTweets(tk.Frame):
                         branch_id = self.last_branch_id
                     self.dict['leaves'][leaf_id] = branch_id
                     # Send the tweet to the tree queue, from where it will be added to the treeview
-                    self.treeQueue.sendItem([str(branch_id)+'-'+str(turns-1), str(branch_id)+'-'+str(turns), status.text])
+                    self.treeQueueOne.sendItem([str(branch_id)+'-'+str(turns-1), str(branch_id)+'-'+str(turns), status.text])
                     print("found one in dict")
                     return {'author_set': author_set, 'turns': turns, 'branch_id': branch_id}
                 else:
@@ -373,7 +372,7 @@ class IncomingTweets(tk.Frame):
                         }
                         branch_id = result['branch_id']
                         # Send the tweet to the tree queue, from where it will be added to the treeview
-                        self.treeQueue.sendItem([str(branch_id)+'-'+str(turns-1), str(branch_id)+'-'+str(turns), status.text])
+                        self.treeQueueOne.sendItem([str(branch_id)+'-'+str(turns-1), str(branch_id)+'-'+str(turns), status.text])
                         return {'author_set': author_set, 'turns': turns, 'branch_id': branch_id}
                     else:
                         # If recursive fuction returns False, so conversation is invalid
@@ -401,7 +400,7 @@ class IncomingTweets(tk.Frame):
                 branch_id = self.last_branch_id
                 self.dict['leaves'][leaf_id] = branch_id
                 # Send the tweet to the tree queue, from where it will be added to the treeview
-                self.treeQueue.sendItem(['', str(branch_id)+'-'+str(1), status.text])
+                self.treeQueueOne.sendItem(['', str(branch_id)+'-'+str(1), status.text])
                 return {'author_set': {status.author.name}, 'turns': 1, 'branch_id': branch_id}
             else:
                 # If convo doesn't meet requirements, return False
