@@ -154,11 +154,11 @@ class IncomingTweets(tk.Frame):
         self.last_branch_id = 0
         threading.Thread(target=self.check_tweet_queue, daemon=True).start()
         self.after(10, self.check_tree_queues)
-        self.columnconfigure(0, weight=2)
-        self.columnconfigure(1, weight=2)
+        self.columnconfigure(0, weight=3)
+        self.columnconfigure(1, weight=3)
         self.columnconfigure(2, weight=1)
-        self.columnconfigure(3, weight=2)
-        self.columnconfigure(4, weight=2)
+        self.columnconfigure(3, weight=3)
+        self.columnconfigure(4, weight=3)
         self.rowconfigure(0, weight=1)
 
         # Make menubar
@@ -208,9 +208,9 @@ class IncomingTweets(tk.Frame):
         
         # Buttons
         self.var_button = tk.Button(self, text = "Start stream", command = lambda: self.set_variables())
-        self.var_button.grid(column=0, row=7, sticky = 'nsew', pady = 15, padx = 15)
+        self.var_button.grid(column=1, row=7, sticky = 'nsew', pady = 15, padx = 15)
         self.stop_button = tk.Button(self, text = "Stop stream", command = lambda: self.stop_stream())
-        self.stop_button.grid(column=1, row=7, sticky = 'nsew', pady = 15, padx = 15)
+        self.stop_button.grid(column=0, row=7, sticky = 'nsew', pady = 15, padx = 15)
         
         ## Second Frame
         
