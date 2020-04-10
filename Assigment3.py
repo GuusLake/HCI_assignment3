@@ -13,6 +13,7 @@ import queue
 import json
 import threading
 from geopy import Nominatim
+from nltk.sentiment.vader import SentimentIntensityAnalyzer
 
 
 class CustomStream(tweepy.StreamListener):
@@ -139,16 +140,19 @@ class Credentials():
 
 class IncomingTweets(tk.Frame):
     ''' Main interface class for the Twitter stream '''
-    def __init__(self, parent, api, tweetQueue, treeQueue):
+    def __init__(self, parent, api, tweetQueue, treeQueueOne, treeQueueTwo):
         tk.Frame.__init__(self, parent)
         self.parent = parent
         self.api = api
         self.tweetQueue = tweetQueue
-        self.treeQueue = treeQueue
+        self.treeQueueOne = treeQueueOne
+        self.treeQueueTwo = treeQueueTwo
         self.dict = {'leaves': dict(), 'tweets': dict()}
+        self.loaded = dict()
+        self.sentiment = dict()
         self.last_branch_id = 0
         threading.Thread(target=self.check_tweet_queue, daemon=True).start()
-        self.after(10, self.check_tree_queue)
+        self.after(10, self.check_tree_queues)
         self.columnconfigure(0, weight=1)
         self.grid_rowconfigure(0, weight=1)
 
@@ -191,18 +195,37 @@ class IncomingTweets(tk.Frame):
         self.var_button = tk.Button(self, text = "Start stream", command = lambda: self.set_variables())
         self.var_button.grid(column=1, row=5, rowspan =2, sticky = 'nse', padx=15, pady=15)
         
-        # Treeview with conversations
-        self.tree = ttk.Treeview(self)
-        self.yscrollbarTree = ttk.Scrollbar(self, orient='vertical', command=self.tree.yview)
-        self.tree.configure(yscrollcommand=self.yscrollbarTree.set)
-        self.yscrollbarTree.grid(row=0, column=1, sticky='nse')
-        self.tree.grid(column=0, row=0, columnspan=3, sticky= 'nsew')
+        # Treeviews with conversations
+        self.tree_one = ttk.Treeview(self)
+        self.yscrollbarTreeOne = ttk.Scrollbar(self, orient='vertical', command=self.tree_one.yview)
+        self.tree_one.configure(yscrollcommand=self.yscrollbarTreeOne.set)
+        self.yscrollbarTreeOne.grid(row=0, column=1, sticky='nse')
+        self.tree_one.grid(column=0, row=0, columnspan=3, sticky= 'nsew')
+        
+        self.tree_two = ttk.Treeview(self)
+        self.yscrollbarTreeTwo = ttk.Scrollbar(self, orient='vertical', command=self.tree_two.yview)
+        self.tree_two.configure(yscrollcommand=self.yscrollbarTreeTwo.set)
+        self.yscrollbarTreeTwo.grid(row=0, column=2, sticky='nse')
+        self.tree_two.grid(column=1, row=0, columnspan=3, sticky= 'nsew')
     
     def save(self):
         f = open(self.langloc_string.get()+"-"+self.keyrad_string.get()+" "+str(self.option_value.get())+".json", 'w')
         json_string = json.dumps(self.dict)
         f.write(json_string)
         f.close()
+        
+    def load(self, filename):
+        f = open(filename, 'r')
+        self.loaded = json.loads(f) # DOES THIS WORK?
+        for leaf in self.loaded['leaves']
+            self.load_convo(leaf, leaf, [])
+            
+    def load_convo(self, leaf_id, tweet_id, sentiments):
+        parent_id = self.loaded['tweets'][tweet_id][parent]
+        if parent_id:
+            
+            self.load_convo(branch_id, parent_id)
+        
 
     def set_lan_key(self):
         self.old_loc = self.langloc_string.get()
@@ -220,11 +243,11 @@ class IncomingTweets(tk.Frame):
         self.keyrad_string.set(self.old_rad)
         self.keyrad_label['text'] = 'Radius'
         
-    def check_tree_queue(self):
+    def check_tree_queues(self):
         ''' Gets items from tree queue and adds them to treeview, runs on main loop ''' 
         try:
-            # Try getting an item from tree queue
-            parent, id, text = self.treeQueue.getNextItem()
+            # Try getting an item from tree queue ONE
+            parent, id, text = self.treeQueueOne.getNextItem()
             try:
                 # Try to insert item into tree
                 self.tree.insert(parent, 'end', id, text=text)
@@ -232,7 +255,18 @@ class IncomingTweets(tk.Frame):
                 # Sometimes the text isn't compatible with treeview, eg. some emojis
                 self.tree.insert(parent, 'end', id, text="TWEET CANNOT BE DISPLAYED")
         except: pass
-        self.after(10, self.check_tree_queue)
+        
+        try:
+            # Try getting an item from tree queue TWO
+            parent, id, text = self.treeQueueTwo.getNextItem()
+            try:
+                # Try to insert item into tree
+                self.tree.insert(parent, 'end', id, text=text)
+            except:
+                # Sometimes the text isn't compatible with treeview, eg. some emojis
+                self.tree.insert(parent, 'end', id, text="TWEET CANNOT BE DISPLAYED")
+        except: pass
+        self.after(10, self.check_tree_queues)
         
     def check_tweet_queue(self):
         ''' Threaded function which takes tweets from queue, has them processed and added to tree queue '''
@@ -367,12 +401,13 @@ def convert_to_degrees(dist):
 
 def main():
     tweetQueue = MyQueue(100, False, False)
-    treeQueue = MyQueue(100, True, False)
+    treeQueueOne = MyQueue(100, True, False)
+    treeQueueTwo = MyQueue(100, True, False)
     api = Credentials(tweetQueue)
     api.setup_stream()
     root = tk.Tk()
     root.geometry('1280x720')
-    inc_tweets = IncomingTweets(root, api, tweetQueue, treeQueue)
+    inc_tweets = IncomingTweets(root, api, tweetQueue, treeQueueOne, treeQueueTwo)
     inc_tweets.pack(side=tk.LEFT, fill=tk.BOTH, expand=1)
     root.mainloop()
 
