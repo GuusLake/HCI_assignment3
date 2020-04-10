@@ -304,7 +304,16 @@ class IncomingTweets(tk.Frame):
                     if not (pos[i] >= tres_pos[i] and neg[i] >= tres_neg[i]):
                         requirements_met = False
                 if requirements_met:
-                    print("test")
+                    self.show_convo(leaf)
+                    
+    def show_convo(self, leaf):
+        parent_id = self.loaded['tweets'][str(tweet_id)]['parent']
+        if parent_id:
+            # Recursive case
+            sentiments = self.get_sentiment(parent_id)
+        else:
+            # Base case
+            sentiments = list()
             
     def get_sentiment(self, tweet_id):
         ''' Recursively get sentiment analysis of every tweet in conversation '''
