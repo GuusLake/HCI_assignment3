@@ -285,7 +285,7 @@ class IncomingTweets(tk.Frame):
         
     def load(self):
         ''' Loads a tweet dictionary from a .json file '''
-        filename = filedialog.askopenfilename(initialdir = os.getcwd(),title = 'Select input json', filetypes = (('JSON files', '.json')))
+        filename = filedialog.askopenfilename(initialdir = os.getcwd(),title = 'Select input JSON', filetypes = (('JSON files', '.json')))
         f = open(filename, 'r')
         self.loaded = json.load(f)
         f.close()
@@ -535,6 +535,7 @@ class IncomingTweets(tk.Frame):
         exit()
 
 def convert_to_degrees(dist):
+    '''Converts km to degrees and divides it by 2'''
     return ((dist*(1/111))/2)
 
 
