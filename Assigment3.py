@@ -206,8 +206,7 @@ class IncomingTweets(tk.Frame):
         self.stop_button = tk.Button(self, text = "Stop stream", command = lambda: self.stop_stream())
         self.stop_button.grid(column=1, row=6, sticky = 'nse')
         
-        # Second Frame
-        
+        ## Second Frame
 
         # Treeviews with conversations
         self.tree_one = ttk.Treeview(self)
@@ -221,6 +220,14 @@ class IncomingTweets(tk.Frame):
         self.tree_two.configure(yscrollcommand=self.yscrollbarTreeTwo.set)
         self.yscrollbarTreeTwo.grid(row=0, column=2, sticky='nse')
         self.tree_two.grid(column=1, row=0, columnspan=3, sticky= 'nsew')
+        
+        # Input fields
+        self.min_num_string = tk.IntVar()
+        self.min_num_entry = tk.Entry(self, textvariable=self.min_num_string)
+        self.min_num_string.set(2)
+        self.min_num_label = tk.Label(self, text='Minimum number of participants')
+        self.min_num_label.grid(column=2, row=1, sticky= 'nsw')
+        self.min_num_entry.grid(column=2, row=2, columnspan = 2, sticky= 'nswe')
     
     def save(self):
         f = open(self.langloc_string.get()+"-"+self.keyrad_string.get()+" "+str(self.option_value.get())+".json", 'w')
@@ -231,8 +238,8 @@ class IncomingTweets(tk.Frame):
     def load(self, filename):
         f = open(filename, 'r')
         self.loaded = json.loads(f) # DOES THIS WORK?
-        for leaf in self.loaded['leaves']
-            self.load_convo(leaf, leaf, [])
+        #for leaf in self.loaded['leaves']
+         #   self.load_convo(leaf, leaf, [])
             
     def load_convo(self, leaf_id, tweet_id, sentiments):
         parent_id = self.loaded['tweets'][tweet_id][parent]
