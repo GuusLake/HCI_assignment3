@@ -292,11 +292,14 @@ class IncomingTweets(tk.Frame):
         for leaf in self.loaded['leaves']:
             # Get sentiment array for each conversation
             self.sentiment[leaf] = self.get_sentiment(leaf)
-        print(self.sentiment)
+        # Filter and show all loaded converstations
         self.filter()
         
     def filter(self):
+        ''' Compares all conversations to the current filters and shows them if valid'''
+        # Clear the second treeview of old items
         self.tree_two.delete(*self.tree_two.get_children())
+        # Get values from the filter inputs
         min_num = int(self.min_num_string.get())
         max_num = int(self.max_num_string.get())
         min_len = int(self.min_len_string.get())
@@ -306,30 +309,35 @@ class IncomingTweets(tk.Frame):
         tres_neg_str = self.tres_neg_string.get()
         tres_neg = [float(i) for i in tres_neg_str.split(', ')]
         for leaf in self.loaded['leaves']:
+            # Every leaf corresponds to a conversation
             num = len(self.loaded['tweets'][str(leaf)]['author_set'])
             leng = self.loaded['tweets'][str(leaf)]['turns']
             pos = [i['pos'] for i in self.sentiment[leaf]]
             neg = [i['neg'] for i in self.sentiment[leaf]]
             if num >= min_num and num <= max_num and leng >= min_len and leng <= max_len:
-                print("requirements part 1 success")
+                # Check the single variable requirements
                 requirements_met = True
                 for i in range(leng):
+                    # Check list requirements
                     if not (pos[i] >= tres_pos[i] and neg[i] >= tres_neg[i]):
                         requirements_met = False
                 if requirements_met:
-                    print("requirements part 2 success")
+                    # If all requirements met, show conversation in second treeview
                     self.show_convo(leaf, self.loaded['leaves'][str(leaf)])
                     
     def show_convo(self, tweet_id, branch_id):
+        ''' Recurses over a conversation and puts them in queue to be shown starting at root tweet '''
         parent_id = self.loaded['tweets'][str(tweet_id)]['parent']
         turns = self.loaded['tweets'][str(tweet_id)]['turns']
         text = self.loaded['tweets'][str(tweet_id)]['text']
         if parent_id:
-            # Recursive case
+            # First recurse all the way to the root tweet
             self.show_convo(parent_id, branch_id)
+            # Send item to second tree queue
             self.treeQueueTwo.sendItem([str(branch_id)+'-'+str(turns-1), str(branch_id)+'-'+str(turns), text])
         else:
             # Reached root tweet
+            # Send item to second tree queue
             self.treeQueueTwo.sendItem(['', str(branch_id)+'-'+str(turns), text])
             
     def get_sentiment(self, tweet_id):
