@@ -6,7 +6,6 @@
 import tweepy
 import tkinter as tk
 from tkinter import ttk
-from tkinter import simpledialog
 from tkinter import messagebox
 import time
 import queue
@@ -14,6 +13,7 @@ import json
 import threading
 from geopy import Nominatim
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
+import os
 
 
 class CustomStream(tweepy.StreamListener):
@@ -23,9 +23,7 @@ class CustomStream(tweepy.StreamListener):
         self.myQueue = q
     
     def on_status(self, status):
-        # Add stuff here to what to do when a tweet appears
         if status.in_reply_to_status_id:
-            #print(status.text)
             self.myQueue.sendItem(status)
 
     def on_error(self, status_code):
@@ -58,6 +56,7 @@ class Credentials():
         self.geolocator = Nominatim(user_agent = 'Guus en Nick')
 
     def read_cred(self):
+        '''Loads credentials from a txt file'''
         f = open('credentials.txt', 'r')
         f_lines = f.readlines()
         self.consumer_key = f_lines[0].rstrip()
@@ -66,6 +65,7 @@ class Credentials():
         self.access_secret = f_lines[3].rstrip()
         
     def test_credentials(self):
+        '''Tests credentials'''
         self.read_cred()
         try:
             self.test_auth = tweepy.OAuthHandler(self.consumer_key, self.consumer_secret)
@@ -77,11 +77,13 @@ class Credentials():
             return False
     
     def set_new_cred(self):
+        '''Tests and then sets new credentials'''
         if self.test_credentials():
             self.setup_stream()
             print('New credentials will be used the next time the variables are set')
         
     def setup_stream(self):
+        '''Sets credentials for working api'''
         print("Setting up stream...")
         # Get credentials and create api
         self.read_cred()
@@ -94,7 +96,9 @@ class Credentials():
         self.stream = tweepy.Stream(auth = self.api.auth, listener = self.stream_listener)
         
     def set_var(self, lang_loc, key_rad, stream_type):
+        '''Changes the variables for the '''
         self.stream_type = stream_type
+        # language keywordstype
         if stream_type == 1 and key_rad:
             if (lang_loc and key_rad):
                 try:
@@ -117,6 +121,7 @@ class Credentials():
                 except:
                     messagebox.showerror('Error: Input error', 'The given input does not meet the right format, please enter according to the given example. The program will continue to use the old variables')
                     
+        # Location and radius type
         elif (stream_type == 2 and lang_loc and key_rad):
             try:
                 self.location = self.geolocator.geocode(lang_loc)
@@ -141,6 +146,8 @@ class Credentials():
 class IncomingTweets(tk.Frame):
     ''' Main interface class for the Twitter stream '''
     def __init__(self, parent, api, tweetQueue, treeQueueOne, treeQueueTwo):
+        
+        # Initial declarations
         tk.Frame.__init__(self, parent)
         self.parent = parent
         self.api = api
@@ -199,6 +206,7 @@ class IncomingTweets(tk.Frame):
         self.old_loc = "Oude Kijk in Het Jatstraat 26 Groningen"
         self.old_rad = '50'
         
+        # Radiobuttons
         self.option_value = tk.IntVar()
         self.option1 = tk.Radiobutton(self, text='Languages and Keywords', variable = self.option_value, value=1, command = lambda: self.set_lan_key())
         self.option1.select()
@@ -275,8 +283,9 @@ class IncomingTweets(tk.Frame):
         f.write(json_string)
         f.close()
         
-    def load(self, filename):
+    def load(self):
         ''' Loads a tweet dictionary from a .json file '''
+        filename = filedialog.askopenfilename(initialdir = os.getcwd(),title = 'Select input json', filetypes = (('JSON files', '.json')))
         f = open(filename, 'r')
         self.loaded = json.load(f)
         f.close()
@@ -337,6 +346,7 @@ class IncomingTweets(tk.Frame):
         return sentiments
 
     def set_lan_key(self):
+        '''Changes to keywords and language mode'''
         self.old_loc = self.langloc_string.get()
         self.langloc_string.set(self.old_lang)
         self.langloc_label['text'] = 'Languages'
@@ -345,6 +355,7 @@ class IncomingTweets(tk.Frame):
         self.keyrad_label['text'] = 'Keywords'
         
     def set_loc_rad(self):
+        '''Changes to location and radius mode'''
         self.old_lang = self.langloc_string.get()
         self.langloc_string.set(self.old_loc)
         self.langloc_label['text'] = 'Location'
@@ -501,14 +512,17 @@ class IncomingTweets(tk.Frame):
                 return False
         
     def set_variables(self):
+        '''Passes variables from input fields and changes button text'''
         self.api.set_var(self.langloc_string.get(), self.keyrad_string.get(), self.option_value.get())
         self.var_button['text'] = 'Change variables'
         
     def stop_stream(self):
+        '''Stops the current stream and changes button text'''
         self.api.stream.disconnect()
         self.var_button['text'] = 'Start stream'
     
     def quit_program(self):
+        '''Quits the program'''
         self.api.stream.disconnect()
         exit()
 
