@@ -80,10 +80,7 @@ class Credentials():
     def set_new_cred(self):
         if self.test_credentials():
             self.setup_stream()
-            self.start_stream()
-        else:
-            messagebox.showerror('Error: Wrong Credentials', 'The credentials found in credentials.txt were not accepted by twitter. The previous credentials are being used instead.')
-            
+            print('New credentials will be used the next time the variables are set'
         
     def setup_stream(self):
         print("Setting up stream...")
@@ -97,28 +94,47 @@ class Credentials():
         self.stream_listener = CustomStream(self.queue)
         self.stream = tweepy.Stream(auth = self.api.auth, listener = self.stream_listener)
         
-    def set_var(self, languages, keywords, location_string, radius):
-        if languagues:
-            self.lang = languages.split(', ')
-        else:
-            self.lang = False
-        self.keywords = keywords.split(', ')
-        self.radius = radius
-        if location_string:
+    def set_var(self, lang_loc, key_rad, stream_type):
+        self.stream_type = stream_type
+        if stream_type == 1 and key_rad:
+            if (lang_loc and key_rad):
+                try:
+                    self.lang = lang_loc.split(', ')
+                    self.keywords = key_rad.split(', ')
+                    print("Starting stream...")
+                    self.stream.filter(languages = self.lang, track = self.keywords, is_async = True)
+                    print("Started stream?!")
+                except:
+                    messagebox.showerror('Error: Input error', 'The given input does not meet the right format, please enter according to the given example. The program will continue to use the old variables')
+            else:
+                try:
+                    self.lang = False
+                    self.keywords = key_rad.split(', ')
+                    print("Starting stream...")
+                    self.stream.filter(track = self.keywords, is_async = True)
+                    print("Started stream?!")
+                except:
+                    messagebox.showerror('Error: Input error', 'The given input does not meet the right format, please enter according to the given example. The program will continue to use the old variables')
+                    
+        elif (streamtype == 2 and lang_loc and key_rad):
             try:
                 self.location = self.geolocator.geocode(location_string)
-                self.loc = [self.location.longitude, self.location.latitude]
+                rad = convert_to_degrees(int(keyrad))
+                self.loc = [self.location.longitude-rad, self.location.latitude-rad, self.location.longitude+rad, self.location.latitude+rad]
+                print("Starting stream...")
+                self.stream.filter(locations = self.loc, is_async = True)
+                print("Starting stream...")
             except:
-                messagebox.showerror('Error: Location not found', 'The given location has not been found, no location will be used instead')
-                self.loc = False
+                messagebox.showerror('Error: Location not found', 'The given location has not been found. The program will continue to use the old variables')
         else:
-            self.loc = False
+            if streamtype == 1:
+                messagebox.showerror('Error: No input', 'Twitter requires us to give a search term, please enter one. The program will continue to use the old variables')
+            else:
+                if not(key_Rad):
+                    messagebox.showerror('Error: No input', 'Twitter requires us to give a location, please enter one. The program will continue to use the old variables')
+                else:
+                    messagebox.showerror('Error: No input', 'Twitter requires us to give a radius, please enter one. The program will continue to use the old variables')
         
-        
-    def start_stream(self):
-        print("Starting stream...")
-        threading.Thread(target=lambda: self.stream.filter(languages = self.lang, track = self.keywords), daemon=True).start()
-        print("Started stream?!")
 
 class IncomingTweets(tk.Frame):
     ''' Main interface class for the Twitter stream '''
@@ -184,6 +200,7 @@ class IncomingTweets(tk.Frame):
         self.old_rad = self.keyrad_string.get()
         self.keyrad_string.set(self.old_key)
         self.keyrad_label['text'] = 'Keywords'
+        print(self.option_value.get())
         
     def set_loc_rad(self):
         self.old_lang = self.langloc_string.get()
@@ -192,6 +209,7 @@ class IncomingTweets(tk.Frame):
         self.old_key = self.keyrad_string.get()
         self.keyrad_string.set(self.old_rad)
         self.keyrad_label['text'] = 'Radius'
+        print(self.option_value.get())
         
     def check_queue(self):
         while True:
@@ -229,9 +247,13 @@ class IncomingTweets(tk.Frame):
             return (status.id in self.dict.keys())
             self.tree.insert('', 'end', status.id, text=status.text)
         self.dict[status.id] = {'author': status.author.name, 'text': status.text, 'parent': parent_id, 'children': list()}
+        
+    def set_variables(self):
+        self.api.set_var(self.langloc_string.get(), self.keyrad_string.get(), self.option_value.get())
+        self.var_button['text'] = 'Set variables'
 
-def set_variables(self):
-        print(' test')
+def convert_to_degrees(dist):
+    return (dist*(1/111))
 
 
 def main():
