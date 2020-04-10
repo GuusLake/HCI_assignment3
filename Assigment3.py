@@ -232,23 +232,30 @@ class IncomingTweets(tk.Frame):
         self.max_num_entry.grid(column=3, row=2, sticky= 'nswe')
     
     def save(self):
+        ''' Saves current tweet dictionary to a .json file '''
         f = open(self.langloc_string.get()+"-"+self.keyrad_string.get()+" "+str(self.option_value.get())+".json", 'w')
         json_string = json.dumps(self.dict)
         f.write(json_string)
         f.close()
         
     def load(self, filename):
+        ''' Loads a tweet dictionary from a .json file '''
         f = open(filename, 'r')
-        self.loaded = json.load(f) # DOES THIS WORK?
+        self.loaded = json.load(f)
+        f.close()
         for leaf in self.loaded['leaves']:
+            # Get sentiment array for each conversation
             self.sentiment[leaf] = self.get_sentiment(leaf)
         print(self.sentiment)
             
     def get_sentiment(self, tweet_id):
+        ''' Recursively get sentiment analysis of every tweet in conversation '''
         parent_id = self.loaded['tweets'][str(tweet_id)]['parent']
         if parent_id:
+            # Recursive case
             sentiments = self.get_sentiment(parent_id)
         else:
+            # Base case
             sentiments = list()
         ss = self.sid.polarity_scores(self.loaded['tweets'][str(tweet_id)]['text'])
         sentiments.append({'pos': ss['pos'], 'neg': ss['neg']})
