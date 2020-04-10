@@ -176,7 +176,7 @@ class IncomingTweets(tk.Frame):
         self.yscrollbarTreeOne = ttk.Scrollbar(self, orient='vertical', command=self.tree_one.yview)
         self.tree_one.configure(yscrollcommand=self.yscrollbarTreeOne.set)
         self.yscrollbarTreeOne.grid(row=0, column=1, sticky='nse')
-        self.tree_one.grid(column=0, row=0, columnspan=3, sticky= 'nse')
+        self.tree_one.grid(column=0, row=0, columnspan=3, sticky= 'nsw')
         
         # Input fields and buttons
         self.langloc_string = tk.StringVar()
@@ -213,15 +213,22 @@ class IncomingTweets(tk.Frame):
         self.yscrollbarTreeTwo = ttk.Scrollbar(self, orient='vertical', command=self.tree_two.yview)
         self.tree_two.configure(yscrollcommand=self.yscrollbarTreeTwo.set)
         self.yscrollbarTreeTwo.grid(row=0, column=2, sticky='nse')
-        self.tree_two.grid(column=1, row=0, columnspan=3, sticky= 'nsew')
+        self.tree_two.grid(column=2, row=0, sticky= 'nse')
         
         # Input fields
-        self.min_num_string = tk.IntVar()
+        self.min_num_string = tk.StringVar()
         self.min_num_entry = tk.Entry(self, textvariable=self.min_num_string)
         self.min_num_string.set(2)
         self.min_num_label = tk.Label(self, text='Minimum number of participants')
         self.min_num_label.grid(column=2, row=1, sticky= 'nsw')
-        self.min_num_entry.grid(column=2, row=2, columnspan = 2, sticky= 'nswe')
+        self.min_num_entry.grid(column=2, row=2, sticky= 'nswe')
+        
+        self.max_num_string = tk.StringVar()
+        self.max_num_entry = tk.Entry(self, textvariable=self.min_num_string)
+        self.max_num_string.set('10')
+        self.max_num_label = tk.Label(self, text='maximum number of participants')
+        self.max_num_label.grid(column=3, row=1, sticky= 'nsw')
+        self.max_num_entry.grid(column=3, row=2, sticky= 'nswe')
     
     def save(self):
         f = open(self.langloc_string.get()+"-"+self.keyrad_string.get()+" "+str(self.option_value.get())+".json", 'w')
