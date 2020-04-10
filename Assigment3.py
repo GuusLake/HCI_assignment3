@@ -98,26 +98,30 @@ class Credentials():
                 try:
                     self.lang = lang_loc.split(', ')
                     self.keywords = key_rad.split(', ')
+                    self.stream.disconnect()
                     print("Starting stream...")
                     self.stream.filter(languages = self.lang, track = self.keywords, is_async = True)
                     print("Started stream?!")
                 except:
-                    messagebox.showerror('Error: Input error', 'The given input does not meet the right format, please enter according to the given example. The program will continue to use the old variables')
+                    messagebox.showerror('Error: Input error', 'The given input does not meet the right format, please enter according to the given example.')
             else:
                 try:
                     self.lang = False
                     self.keywords = key_rad.split(', ')
+                    self.stream.disconnect()
                     print("Starting stream...")
                     self.stream.filter(track = self.keywords, is_async = True)
                     print("Started stream?!")
                 except:
                     messagebox.showerror('Error: Input error', 'The given input does not meet the right format, please enter according to the given example. The program will continue to use the old variables')
                     
-        elif (streamtype == 2 and lang_loc and key_rad):
+        elif (stream_type == 2 and lang_loc and key_rad):
             try:
-                self.location = self.geolocator.geocode(location_string)
-                rad = convert_to_degrees(int(keyrad))
+                self.location = self.geolocator.geocode(lang_loc)
+                rad = convert_to_degrees(int(key_rad))
                 self.loc = [self.location.longitude-rad, self.location.latitude-rad, self.location.longitude+rad, self.location.latitude+rad]
+                print(self.loc)
+                self.stream.disconnect()
                 print("Starting stream...")
                 self.stream.filter(locations = self.loc, is_async = True)
                 print("Starting stream...")
@@ -144,13 +148,15 @@ class IncomingTweets(tk.Frame):
         self.last_branch_id = 0
         threading.Thread(target=self.check_tweet_queue, daemon=True).start()
         self.after(10, self.check_tree_queue)
+        self.columnconfigure(0, weight=1)
+        self.grid_rowconfigure(0, weight=1)
 
         # Make menubar
         self.menubar = tk.Menu(self)
         self.filemenu = tk.Menu(self.menubar, tearoff=0)
         self.filemenu.add_command(label="Load conversation", command=exit)
         self.filemenu.add_command(label="Save conversation", command=exit)
-        self.filemenu.add_command(label="Exit", command=exit)
+        self.filemenu.add_command(label="Exit", command=lambda: self.quit_program())
         self.menubar.add_cascade(label="File", menu=self.filemenu)
         self.accountmenu = tk.Menu(self.menubar, tearoff=0)
         self.accountmenu.add_command(label="Load credentials", command=lambda:self.api.set_new_cred())
@@ -188,7 +194,7 @@ class IncomingTweets(tk.Frame):
         self.tree = ttk.Treeview(self)
         self.yscrollbarTree = ttk.Scrollbar(self, orient='vertical', command=self.tree.yview)
         self.tree.configure(yscrollcommand=self.yscrollbarTree.set)
-        self.yscrollbarTree.grid(row=0, column=0, sticky='nse')
+        self.yscrollbarTree.grid(row=0, column=1, sticky='nse')
         self.tree.grid(column=0, row=0, columnspan=3, sticky= 'nsew')
 
     def set_lan_key(self):
@@ -198,7 +204,6 @@ class IncomingTweets(tk.Frame):
         self.old_rad = self.keyrad_string.get()
         self.keyrad_string.set(self.old_key)
         self.keyrad_label['text'] = 'Keywords'
-        print(self.option_value.get())
         
     def set_loc_rad(self):
         self.old_lang = self.langloc_string.get()
@@ -207,7 +212,6 @@ class IncomingTweets(tk.Frame):
         self.old_key = self.keyrad_string.get()
         self.keyrad_string.set(self.old_rad)
         self.keyrad_label['text'] = 'Radius'
-        print(self.option_value.get())
         
     def check_tree_queue(self):
         ''' Gets items from tree queue and adds them to treeview, runs on main loop ''' 
@@ -338,6 +342,10 @@ class IncomingTweets(tk.Frame):
     def set_variables(self):
         self.api.set_var(self.langloc_string.get(), self.keyrad_string.get(), self.option_value.get())
         self.var_button['text'] = 'Set variables'
+        
+    def quit_program(self):
+        self.api.stream.disconnect()
+        exit()
 
 def convert_to_degrees(dist):
     return (dist*(1/111))
