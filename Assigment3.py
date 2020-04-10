@@ -176,7 +176,7 @@ class IncomingTweets(tk.Frame):
         self.yscrollbarTreeOne = ttk.Scrollbar(self, orient='vertical', command=self.tree_one.yview)
         self.tree_one.configure(yscrollcommand=self.yscrollbarTreeOne.set)
         self.yscrollbarTreeOne.grid(row=0, column=1, sticky='nse')
-        self.tree_one.grid(column=0, row=0, columnspan=3, sticky= 'nsw')
+        self.tree_one.grid(column=0, row=0, columnspan=3, sticky= 'nsew')
         
         # Input fields and buttons
         self.langloc_string = tk.StringVar()
@@ -213,7 +213,7 @@ class IncomingTweets(tk.Frame):
         self.yscrollbarTreeTwo = ttk.Scrollbar(self, orient='vertical', command=self.tree_two.yview)
         self.tree_two.configure(yscrollcommand=self.yscrollbarTreeTwo.set)
         self.yscrollbarTreeTwo.grid(row=0, column=2, sticky='nse')
-        self.tree_two.grid(column=2, row=0, sticky= 'nse')
+        self.tree_two.grid(column=2, row=0, columnspan = 2, sticky= 'nsew')
         
         # Input fields
         self.min_num_string = tk.StringVar()
