@@ -292,17 +292,17 @@ class IncomingTweets(tk.Frame):
         min_len = int(self.min_len_string.get())
         max_len = int(self.max_len_string.get())
         tres_pos_str = self.tres_pos_string.get()
-        tres_pos = [int(i) for i in tres_pos_str.split()]
+        tres_pos = [float(i) for i in tres_pos_str.split(', ')]
         tres_neg_str = self.tres_neg_string.get()
-        tres_neg = [int(i) for i in tres_neg_str.split()]
+        tres_neg = [float(i) for i in tres_neg_str.split(', ')]
         for leaf in self.loaded['leaves']:
             num = len(self.loaded['tweets'][str(leaf)]['author_set'])
-            len = self.loaded['tweets'][str(leaf)]['turns']
+            leng = self.loaded['tweets'][str(leaf)]['turns']
             pos = [i['pos'] for i in self.sentiment[leaf]]
             neg = [i['neg'] for i in self.sentiment[leaf]]
-            if num >= min_num and num <= max_num and len >= min_len and len <= max_len:
+            if num >= min_num and num <= max_num and leng >= min_len and leng <= max_len:
                 requirements_met = True
-                for i in range(len):
+                for i in range(leng):
                     if not (pos[i] >= tres_pos[i] and neg[i] >= tres_neg[i]):
                         requirements_met = False
                 if requirements_met:
@@ -314,7 +314,7 @@ class IncomingTweets(tk.Frame):
             # Recursive case
             self.show_convo(parent_id, branch_id)
         turns = self.loaded['tweets'][str(tweet_id)]['turns']
-        text = self.loaded['tweets'][str[(tweet_id)]['text']
+        text = self.loaded['tweets'][str[(tweet_id)]]['text']
         self.treeQueueTwo.sendItem([str(branch_id)+'-'+str(turns-1), str(branch_id)+'-'+str(turns), text])
             
     def get_sentiment(self, tweet_id):
