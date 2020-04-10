@@ -293,6 +293,10 @@ class IncomingTweets(tk.Frame):
         tres_pos = [int(i) for i in tres_pos_str.split()]
         tres_neg_str = self.tres_neg_string.get()
         tres_neg = [int(i) for i in tres_neg_str.split()]
+        for leaf in self.loaded['leaves']:
+            num = len(self.loaded['tweets'][str(leaf)]['author_set'])
+            len = self.loaded['tweets'][str(leaf)]['turns']
+            pos = self.sentiment[leaf]
             
     def get_sentiment(self, tweet_id):
         ''' Recursively get sentiment analysis of every tweet in conversation '''
