@@ -362,7 +362,7 @@ class IncomingTweets(tk.Frame):
         exit()
 
 def convert_to_degrees(dist):
-    return (dist*(1/111))
+    return ((dist*(1/111))/2)
 
 
 def main():
