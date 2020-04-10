@@ -158,7 +158,6 @@ class IncomingTweets(tk.Frame):
         self.columnconfigure(1, weight=1)
         self.columnconfigure(2, weight=1)
         self.columnconfigure(3, weight=1)
-        self.columnconfigure(4, weight=1)
         self.rowconfigure(0, weight=1)
 
         # Make menubar
@@ -207,9 +206,9 @@ class IncomingTweets(tk.Frame):
         self.option2.grid(column=0, row=6, sticky= 'nsw')
         
         self.var_button = tk.Button(self, text = "Start stream", command = lambda: self.set_variables())
-        self.var_button.grid(column=1, row=5, sticky = 'nse')
+        self.var_button.grid(column=0, row=7, sticky = 'nse', pady = 15, padx = 15)
         self.stop_button = tk.Button(self, text = "Stop stream", command = lambda: self.stop_stream())
-        self.stop_button.grid(column=1, row=6, sticky = 'nse')
+        self.stop_button.grid(column=1, row=7, sticky = 'nse', pady = 15, padx = 15)
         
         ## Second Frame
         
