@@ -216,10 +216,15 @@ class IncomingTweets(tk.Frame):
     def check_tree_queue(self):
         try:
             parent, id, text = self.treeQueue.getNextItem()
+            #print("recieved item")
             #print(parent)
             #print(id)
             #print(text)
-            self.tree.insert(parent, 'end', id, text=text)
+            #print(text)
+            try:
+                self.tree.insert(parent, 'end', id, text=text)
+            except:
+                self.tree.insert(parent, 'end', id, text="TWEET CANNOT BE DISPLAYED")
         except: 
             #print("tree queue empty")
             pass
@@ -257,7 +262,7 @@ class IncomingTweets(tk.Frame):
                 total_author_set.add(status.author.name)
                 authors = len(total_author_set)
                 total_turns = total_turns + self.dict['tweets'][parent_id][turns] + 1
-                if (authors > 1 and authors <= 10 and total_turns > 1 and total_turns <= 10):
+                if (authors > 1 and authors <= 10 and total_turns > 2 and total_turns <= 10):
                     author_set = self.dict['tweets'][parent_id][author_set]
                     author_set.add(status.author.name)
                     turns = self.dict['tweets'][parent_id][turns] + 1
@@ -303,16 +308,18 @@ class IncomingTweets(tk.Frame):
                         }
                         branch_id = result['branch_id']
                         #print("sending intermediate item")
+                        #print(status.text)
                         self.treeQueue.sendItem([str(branch_id)+'-'+str(turns-1), str(branch_id)+'-'+str(turns), status.text])
                         return {'author_set': author_set, 'turns': turns, 'branch_id': branch_id}
                     else:
                         return False
-                else: return False
+                else:
+                    return False
         else:
             total_author_set.add(status.author.name)
             authors = len(total_author_set)
             total_turns = total_turns + 1
-            if (authors > 1 and authors <= 10 and total_turns > 1 and total_turns <= 10):
+            if (authors > 1 and authors <= 10 and total_turns > 2 and total_turns <= 10):
                 #print("found one")
                 self.dict['tweets'][status.id] = {
                     'author': status.author.name, 
