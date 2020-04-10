@@ -154,11 +154,11 @@ class IncomingTweets(tk.Frame):
         self.last_branch_id = 0
         threading.Thread(target=self.check_tweet_queue, daemon=True).start()
         self.after(10, self.check_tree_queues)
-        self.columnconfigure(0, weight=3)
-        self.columnconfigure(1, weight=3)
+        self.columnconfigure(0, weight=4)
+        self.columnconfigure(1, weight=4)
         self.columnconfigure(2, weight=1)
-        self.columnconfigure(3, weight=3)
-        self.columnconfigure(4, weight=3)
+        self.columnconfigure(3, weight=4)
+        self.columnconfigure(4, weight=4)
         self.rowconfigure(0, weight=1)
 
         # Make menubar
@@ -252,14 +252,14 @@ class IncomingTweets(tk.Frame):
         
         self.tres_pos_string = tk.StringVar()
         self.tres_pos_entry = tk.Entry(self, textvariable=self.tres_pos_string)
-        self.tres_pos_string.set('0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001')
+        self.tres_pos_string.set('0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000')
         self.tres_pos_label = tk.Label(self, text='List of positive tresholds')
         self.tres_pos_label.grid(column=3, row=5, sticky= 'nsw')
         self.tres_pos_entry.grid(column=3, row=6, sticky= 'nswe')
         
         self.tres_neg_string = tk.StringVar()
         self.tres_neg_entry = tk.Entry(self, textvariable=self.tres_neg_string)
-        self.tres_neg_string.set('0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001')
+        self.tres_neg_string.set('0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000')
         self.tres_neg_label = tk.Label(self, text='List of negative tresholds')
         self.tres_neg_label.grid(column=4, row=5, sticky= 'nsw')
         self.tres_neg_entry.grid(column=4, row=6, sticky= 'nswe')
