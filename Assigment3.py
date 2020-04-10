@@ -275,6 +275,17 @@ class IncomingTweets(tk.Frame):
             # Get sentiment array for each conversation
             self.sentiment[leaf] = self.get_sentiment(leaf)
         print(self.sentiment)
+        self.filter()
+        
+    def filter(self):
+        min_num = int(self.min_num_string.get())
+        max_num = int(self.max_num_string.get())
+        min_len = int(self.min_len_string.get())
+        max_len = int(self.max_len_string.get())
+        tres_pos_str = self.tres_pos_string.get()
+        tres_pos = [int(i) for i in tres_pos_str.split()]
+        tres_neg_str = self.tres_neg_string.get()
+        tres_neg = [int(i) for i in tres_neg_str.split()]
             
     def get_sentiment(self, tweet_id):
         ''' Recursively get sentiment analysis of every tweet in conversation '''
