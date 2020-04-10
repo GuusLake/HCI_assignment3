@@ -54,9 +54,6 @@ class Credentials():
     def __init__(self, queue):
         self.queue = queue
         self.geolocator = Nominatim(user_agent = 'Guus en Nick')
-        #temp
-        self.lang = ['en']
-        self.keywords = ['corona']
 
     def read_cred(self):
         f = open('credentials.txt', 'r')
@@ -134,18 +131,19 @@ class Credentials():
                     messagebox.showerror('Error: No input', 'Twitter requires us to give a location, please enter one. The program will continue to use the old variables')
                 else:
                     messagebox.showerror('Error: No input', 'Twitter requires us to give a radius, please enter one. The program will continue to use the old variables')
-        
 
 class IncomingTweets(tk.Frame):
     ''' Main interface class for the Twitter stream '''
-    def __init__(self, parent, api, queue):
+    def __init__(self, parent, api, tweetQueue, treeQueue):
         tk.Frame.__init__(self, parent)
         self.parent = parent
         self.api = api
-        self.queue = queue
-        self.dict = dict()
-        #self.after(100, check_queue)
-        threading.Thread(target=self.check_queue, daemon=True).start()
+        self.tweetQueue = tweetQueue
+        self.treeQueue = treeQueue
+        self.dict = {'leaves': dict(), 'tweets': dict()}
+        self.last_branch_id = 0
+        threading.Thread(target=self.check_tweet_queue, daemon=True).start()
+        self.after(10, self.check_tree_queue)
 
         # Make menubar
         self.menubar = tk.Menu(self)
@@ -211,27 +209,124 @@ class IncomingTweets(tk.Frame):
         self.keyrad_label['text'] = 'Radius'
         print(self.option_value.get())
         
-    def check_queue(self):
+    def check_tree_queue(self):
+        try:
+            parent, id, text = self.treeQueue.getNextItem()
+            #print(parent)
+            #print(id)
+            #print(text)
+            self.tree.insert(parent, 'end', id, text=text)
+        except: 
+            #print("tree queue empty")
+            pass
+        self.after(10, self.check_tree_queue)
+        
+    def check_tweet_queue(self):
         while True:
             try:
-                status = self.queue.getNextItem()
-                response = self.get_convo_stats(status)
-                if len(response[0]) > 1 and len(response[0]) <= 10 and response[1] > 1 and response[1] <= 10:
-                    self.add_convo(status)
-                print(self.dict)
-            except: pass
-            time.sleep(0.1)
+                status = self.tweetQueue.getNextItem()
+                response = self.get_convo_stats(status, set(), 0)
+                #if response['old_leaf']:
+                #    if response['old_leaf'] in self.dict['leaves']:
+                #        branch_id = self.dict['leaves'][response['old_leaf']]
+                #        self.dict['leaves'].pop(response['old_leaf'])
+                #else:
+                #    self.last_branch_id += 1
+                #    branch_id = self.last_branch_id
+                #self.dict['leaves'][status.id] = branch_id
+                #TODO
+                #if (len(response[0]) > 1 and len(response[0]) <= 10 and response[1] > 1 and response[1] <= 10):
+                #    self.add_convo(status)
+                #print(self.dict)
+            except:
+                #print("tweet queue empty")
+                pass
+            time.sleep(0.01)
     
-    def get_convo_stats(self, status):
+    def get_convo_stats(self, status, total_author_set, total_turns):
+        #print("doing something with id:")
+        #print(status.id)
         parent_id = status.in_reply_to_status_id  
         if (parent_id):
-            parent = self.api.api.get_status(parent_id)
-            author_set, turns = self.get_convo_stats(parent)
-            author_set.add(status.author.name)
-            turns += 1
-            return [author_set, turns]
+            if parent_id in self.dict['tweets']:
+                total_author_set = total_author_set.union(self.dict['tweets'][parent_id][author_set])
+                total_author_set.add(status.author.name)
+                authors = len(total_author_set)
+                total_turns = total_turns + self.dict['tweets'][parent_id][turns] + 1
+                if (authors > 1 and authors <= 10 and total_turns > 1 and total_turns <= 10):
+                    author_set = self.dict['tweets'][parent_id][author_set]
+                    author_set.add(status.author.name)
+                    turns = self.dict['tweets'][parent_id][turns] + 1
+                    self.dict['tweets'][status.id] = {
+                        'author': status.author.name, 
+                        'text': status.text, 
+                        'parent': parent_id, 
+                        'author_set': author_set, 
+                        'turns': turns
+                    }
+                    if parent_id in self.dict['leaves']:
+                        branch_id = self.dict['leaves'][parent_id]
+                        self.dict['leaves'].pop(parent_id)
+                    else:
+                        self.last_branch_id += 1
+                        branch_id = self.last_branch_id
+                    self.dict['leaves'][status.id] = branch_id
+                    self.treeQueue.sendItem([str(branch_id)+'-'+str(turns-1), str(branch_id)+'-'+str(turns), status.text])
+                    print("found one in dict")
+                    return {'author_set': author_set, 'turns': turns, 'branch_id': branch_id}
+                else:
+                    #print("doesn't meet requirements")
+                    #print(total_author_set)
+                    #print(total_turns)
+                    return False
+            else:
+                parent = self.api.api.get_status(parent_id)
+                total_author_set.add(status.author.name)
+                authors = len(total_author_set)
+                total_turns = total_turns + 1
+                if (authors <= 10 and total_turns <= 10):
+                    result = self.get_convo_stats(parent, total_author_set, total_turns)
+                    if result:
+                        author_set = result['author_set']
+                        author_set.add(status.author.name)
+                        turns = result['turns'] + 1
+                        self.dict['tweets'][status.id] = {
+                            'author': status.author.name, 
+                            'text': status.text, 
+                            'parent': parent_id, 
+                            'author_set': author_set, 
+                            'turns': turns
+                        }
+                        branch_id = result['branch_id']
+                        #print("sending intermediate item")
+                        self.treeQueue.sendItem([str(branch_id)+'-'+str(turns-1), str(branch_id)+'-'+str(turns), status.text])
+                        return {'author_set': author_set, 'turns': turns, 'branch_id': branch_id}
+                    else:
+                        return False
+                else: return False
         else:
-            return [{status.author.name},1]
+            total_author_set.add(status.author.name)
+            authors = len(total_author_set)
+            total_turns = total_turns + 1
+            if (authors > 1 and authors <= 10 and total_turns > 1 and total_turns <= 10):
+                #print("found one")
+                self.dict['tweets'][status.id] = {
+                    'author': status.author.name, 
+                    'text': status.text, 
+                    'parent': parent_id, 
+                    'author_set': {status.author.name}, 
+                    'turns': 1
+                }
+                self.last_branch_id += 1
+                branch_id = self.last_branch_id
+                self.dict['leaves'][status.id] = branch_id
+                self.treeQueue.sendItem(['', str(branch_id)+'-'+str(1), status.text])
+                return {'author_set': {status.author.name}, 'turns': 1, 'branch_id': branch_id}
+            else:
+                #print("doesn't meet requirements")
+                #print(total_author_set)
+                #print(total_turns)
+                return False
 
     def add_convo(self, status):
         parent_id = status.in_reply_to_status_id
@@ -242,10 +337,10 @@ class IncomingTweets(tk.Frame):
                 parent = self.api.api.get_status(parent_id)
                 self.add_convo(parent)
                 self.dict[parent_id][children].append(status.id)
-            self.tree.insert(parent_id, 'end', status.id, text=status.text)
+            #self.tree.insert(parent_id, 'end', status.id, text=status.text)
         else:
             return (status.id in self.dict.keys())
-            self.tree.insert('', 'end', status.id, text=status.text)
+            #self.tree.insert('', 'end', status.id, text=status.text)
         self.dict[status.id] = {'author': status.author.name, 'text': status.text, 'parent': parent_id, 'children': list()}
         
     def set_variables(self):
@@ -257,12 +352,13 @@ def convert_to_degrees(dist):
 
 
 def main():
-    queue = MyQueue(100, False, False)
-    api = Credentials(queue)
+    tweetQueue = MyQueue(100, False, False)
+    treeQueue = MyQueue(100, True, False)
+    api = Credentials(tweetQueue)
     api.setup_stream()
     root = tk.Tk()
     root.geometry('1280x720')
-    inc_tweets = IncomingTweets(root, api, queue)
+    inc_tweets = IncomingTweets(root, api, tweetQueue, treeQueue)
     inc_tweets.pack(side=tk.LEFT, fill=tk.BOTH, expand=1)
     root.mainloop()
 
