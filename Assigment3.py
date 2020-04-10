@@ -301,11 +301,13 @@ class IncomingTweets(tk.Frame):
             pos = [i['pos'] for i in self.sentiment[leaf]]
             neg = [i['neg'] for i in self.sentiment[leaf]]
             if num >= min_num and num <= max_num and leng >= min_len and leng <= max_len:
+                print("requirements part 1 success")
                 requirements_met = True
                 for i in range(leng):
                     if not (pos[i] >= tres_pos[i] and neg[i] >= tres_neg[i]):
                         requirements_met = False
                 if requirements_met:
+                    print("requirements part 2 success")
                     self.show_convo(leaf, self.loaded['leaves'][str(leaf)])
                     
     def show_convo(self, tweet_id, branch_id):
@@ -364,6 +366,10 @@ class IncomingTweets(tk.Frame):
             parent, id, text = self.treeQueueTwo.getNextItem()
             try:
                 # Try to insert item into tree
+                print("recieved tree two item")
+                print(parent)
+                print(id)
+                print(text)
                 self.tree_one.insert(parent, 'end', id, text=text)
             except:
                 # Sometimes the text isn't compatible with treeview, eg. some emojis
