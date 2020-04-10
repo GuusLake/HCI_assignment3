@@ -548,6 +548,7 @@ def main():
     api.setup_stream()
     root = tk.Tk()
     root.geometry('1280x720')
+    root.title('Twitter Interface')
     inc_tweets = IncomingTweets(root, api, tweetQueue, treeQueueOne, treeQueueTwo)
     inc_tweets.pack(side=tk.LEFT, fill=tk.BOTH, expand=1)
     root.mainloop()
