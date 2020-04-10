@@ -155,7 +155,10 @@ class IncomingTweets(tk.Frame):
         threading.Thread(target=self.check_tweet_queue, daemon=True).start()
         self.after(10, self.check_tree_queues)
         self.columnconfigure(0, weight=1)
-        self.grid_rowconfigure(0, weight=1)
+        self.columnconfigure(1, weight=1)
+        self.columnconfigure(2, weight=1)
+        self.columnconfigure(3, weight=1)
+        self.columnconfigure(4, weight=1)
 
         # Make menubar
         self.menubar = tk.Menu(self)
@@ -214,7 +217,7 @@ class IncomingTweets(tk.Frame):
         self.yscrollbarTreeTwo = ttk.Scrollbar(self, orient='vertical', command=self.tree_two.yview)
         self.tree_two.configure(yscrollcommand=self.yscrollbarTreeTwo.set)
         self.yscrollbarTreeTwo.grid(row=0, column=3, sticky='nse')
-        self.tree_two.grid(column=2, row=0, columnspan = 2, sticky= 'nsew')
+        self.tree_two.grid(column=2, row=0, columnspan = 3, sticky= 'nsew')
         
         # Input fields
         self.min_num_string = tk.StringVar()
@@ -258,6 +261,10 @@ class IncomingTweets(tk.Frame):
         self.tres_neg_label = tk.Label(self, text='list of negative tresholds')
         self.tres_neg_label.grid(column=3, row=5, sticky= 'nsw')
         self.tres_neg_entry.grid(column=3, row=6, sticky= 'nswe')
+    
+        # Input buttons
+        self.filter_button = tk.Button(self, text = "Set filter", command = lambda: self.set_variables())
+        self.filter_button.grid(column=4, row=6, sticky = 'nse')
     
     def save(self):
         ''' Saves current tweet dictionary to a .json file '''
