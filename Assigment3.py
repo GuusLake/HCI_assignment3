@@ -258,7 +258,7 @@ class IncomingTweets(tk.Frame):
         self.tres_pos_entry.grid(column=3, row=6, sticky= 'nswe')
         
         self.tres_neg_string = tk.StringVar()
-        self.tres_neg_entry = tk.Entry(self, textvariable=self.max_len_string)
+        self.tres_neg_entry = tk.Entry(self, textvariable=self.tres_neg_string)
         self.tres_neg_string.set('0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001')
         self.tres_neg_label = tk.Label(self, text='List of negative tresholds')
         self.tres_neg_label.grid(column=4, row=5, sticky= 'nsw')
