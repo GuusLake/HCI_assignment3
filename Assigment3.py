@@ -219,17 +219,45 @@ class IncomingTweets(tk.Frame):
         # Input fields
         self.min_num_string = tk.StringVar()
         self.min_num_entry = tk.Entry(self, textvariable=self.min_num_string)
-        self.min_num_string.set(2)
+        self.min_num_string.set('2')
         self.min_num_label = tk.Label(self, text='Minimum number of participants')
         self.min_num_label.grid(column=2, row=1, sticky= 'nsw')
         self.min_num_entry.grid(column=2, row=2, sticky= 'nswe')
         
         self.max_num_string = tk.StringVar()
-        self.max_num_entry = tk.Entry(self, textvariable=self.min_num_string)
+        self.max_num_entry = tk.Entry(self, textvariable=self.max_num_string)
         self.max_num_string.set('10')
         self.max_num_label = tk.Label(self, text='maximum number of participants')
         self.max_num_label.grid(column=3, row=1, sticky= 'nsw')
         self.max_num_entry.grid(column=3, row=2, sticky= 'nswe')
+        
+        self.min_len_string = tk.StringVar()
+        self.min_len_entry = tk.Entry(self, textvariable=self.min_len_string)
+        self.min_len_string.set('2')
+        self.min_len_label = tk.Label(self, text='Minimum length')
+        self.min_len_label.grid(column=2, row=3, sticky= 'nsw')
+        self.min_len_entry.grid(column=2, row=4, sticky= 'nswe')
+        
+        self.max_len_string = tk.StringVar()
+        self.max_len_entry = tk.Entry(self, textvariable=self.max_len_string)
+        self.max_len_string.set('10')
+        self.max_len_label = tk.Label(self, text='maximum length')
+        self.max_len_label.grid(column=3, row=3, sticky= 'nsw')
+        self.max_len_entry.grid(column=3, row=4, sticky= 'nswe')
+        
+        self.tres_pos_string = tk.StringVar()
+        self.tres_pos_entry = tk.Entry(self, textvariable=self.tres_pos_string)
+        self.tres_pos_string.set('2')
+        self.tres_pos_label = tk.Label(self, text='list of positive tresholds')
+        self.tres_pos_label.grid(column=2, row=5, sticky= 'nsw')
+        self.tres_pos_entry.grid(column=2, row=6, sticky= 'nswe')
+        
+        self.tres_neg_string = tk.StringVar()
+        self.tres_neg_entry = tk.Entry(self, textvariable=self.max_len_string)
+        self.tres_neg_string.set('10')
+        self.tres_neg_label = tk.Label(self, text='list of negative tresholds')
+        self.tres_neg_label.grid(column=3, row=5, sticky= 'nsw')
+        self.tres_neg_entry.grid(column=3, row=6, sticky= 'nswe')
     
     def save(self):
         f = open(self.langloc_string.get()+"-"+self.keyrad_string.get()+" "+str(self.option_value.get())+".json", 'w')
