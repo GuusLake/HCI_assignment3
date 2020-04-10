@@ -7,6 +7,7 @@ import tweepy
 import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
+from tkinter import filedialog
 import time
 import queue
 import json
@@ -171,7 +172,7 @@ class IncomingTweets(tk.Frame):
         # Make menubar
         self.menubar = tk.Menu(self)
         self.filemenu = tk.Menu(self.menubar, tearoff=0)
-        self.filemenu.add_command(label="Load conversation", command=lambda: self.load("en, nl-corona 1.json"))
+        self.filemenu.add_command(label="Load conversation", command=self.load)
         self.filemenu.add_command(label="Save conversation", command=self.save)
         self.filemenu.add_command(label="Exit", command=lambda: self.quit_program())
         self.menubar.add_cascade(label="File", menu=self.filemenu)
@@ -273,7 +274,7 @@ class IncomingTweets(tk.Frame):
         self.tres_neg_entry.grid(column=4, row=6, sticky= 'nswe')
     
         # Input buttons
-        self.filter_button = tk.Button(self, text = "Set filter", command = lambda: self.load("en, nl-corona 1.json"))
+        self.filter_button = tk.Button(self, text = "Set filter", command = self.filter)
         self.filter_button.grid(column=4, row=7, sticky = 'nsew', pady = 15, padx = 15)
     
     def save(self):
@@ -285,7 +286,7 @@ class IncomingTweets(tk.Frame):
         
     def load(self):
         ''' Loads a tweet dictionary from a .json file '''
-        filename = filedialog.askopenfilename(initialdir = os.getcwd(),title = 'Select input JSON', filetypes = (('JSON files', '.json')))
+        filename = filedialog.askopenfilename(initialdir = os.getcwd(),title = 'Select input JSON', filetypes = [('JSON files', '.json')])
         f = open(filename, 'r')
         self.loaded = json.load(f)
         f.close()
