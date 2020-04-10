@@ -154,11 +154,11 @@ class IncomingTweets(tk.Frame):
         self.last_branch_id = 0
         threading.Thread(target=self.check_tweet_queue, daemon=True).start()
         self.after(10, self.check_tree_queues)
-        self.columnconfigure(0, weight=3)
-        self.columnconfigure(1, weight=3)
+        self.columnconfigure(0, weight=4)
+        self.columnconfigure(1, weight=4)
         self.columnconfigure(2, weight=1)
-        self.columnconfigure(3, weight=3)
-        self.columnconfigure(4, weight=3)
+        self.columnconfigure(3, weight=4)
+        self.columnconfigure(4, weight=4)
         self.rowconfigure(0, weight=1)
 
         # Make menubar
