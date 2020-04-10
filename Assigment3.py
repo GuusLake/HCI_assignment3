@@ -15,7 +15,7 @@ from geopy import Nominatim
 
 
 class CustomStream(tweepy.StreamListener):
-
+    ''' Subclass of tweepy StreamListener with custom on_status to send tweets to tweet queue '''
     def __init__(self, q):
         tweepy.StreamListener.__init__(self)
         self.myQueue = q
@@ -77,7 +77,7 @@ class Credentials():
     def set_new_cred(self):
         if self.test_credentials():
             self.setup_stream()
-            print('New credentials will be used the next time the variables are set'
+            print('New credentials will be used the next time the variables are set')
         
     def setup_stream(self):
         print("Setting up stream...")
@@ -210,58 +210,49 @@ class IncomingTweets(tk.Frame):
         print(self.option_value.get())
         
     def check_tree_queue(self):
+        ''' Gets items from tree queue and adds them to treeview, runs on main loop ''' 
         try:
+            # Try getting an item from tree queue
             parent, id, text = self.treeQueue.getNextItem()
-            #print("recieved item")
-            #print(parent)
-            #print(id)
-            #print(text)
-            #print(text)
             try:
+                # Try to insert item into tree
                 self.tree.insert(parent, 'end', id, text=text)
             except:
+                # Sometimes the text isn't compatible with treeview, eg. some emojis
                 self.tree.insert(parent, 'end', id, text="TWEET CANNOT BE DISPLAYED")
-        except: 
-            #print("tree queue empty")
-            pass
+        except: pass
         self.after(10, self.check_tree_queue)
         
     def check_tweet_queue(self):
+        ''' Threaded function which takes tweets from queue, has them processed and added to tree queue '''
         while True:
             try:
+                # Try getting an item from tweet queue
                 status = self.tweetQueue.getNextItem()
-                response = self.get_convo_stats(status, set(), 0)
-                #if response['old_leaf']:
-                #    if response['old_leaf'] in self.dict['leaves']:
-                #        branch_id = self.dict['leaves'][response['old_leaf']]
-                #        self.dict['leaves'].pop(response['old_leaf'])
-                #else:
-                #    self.last_branch_id += 1
-                #    branch_id = self.last_branch_id
-                #self.dict['leaves'][status.id] = branch_id
-                #TODO
-                #if (len(response[0]) > 1 and len(response[0]) <= 10 and response[1] > 1 and response[1] <= 10):
-                #    self.add_convo(status)
-                #print(self.dict)
-            except:
-                #print("tweet queue empty")
-                pass
+                # Recursively process the conversation
+                self.process_convo(status.id, status, set(), 0)
+            except: pass
             time.sleep(0.01)
     
-    def get_convo_stats(self, status, total_author_set, total_turns):
+    def process_convo(self, leaf_id, status, total_author_set, total_turns):
+        ''' Recursively traces a converation to its root, checks turn and author count, and adds it if valid '''
         #print("doing something with id:")
         #print(status.id)
         parent_id = status.in_reply_to_status_id  
         if (parent_id):
+            # If tweets has a parent, we haven't reached the root yet
             if parent_id in self.dict['tweets']:
+                # If the parent is already in the dictionary we use the data from there
                 total_author_set = total_author_set.union(self.dict['tweets'][parent_id][author_set])
                 total_author_set.add(status.author.name)
                 authors = len(total_author_set)
                 total_turns = total_turns + self.dict['tweets'][parent_id][turns] + 1
                 if (authors > 1 and authors <= 10 and total_turns > 2 and total_turns <= 10):
+                    # Check if convo meets author and turn requirements
                     author_set = self.dict['tweets'][parent_id][author_set]
                     author_set.add(status.author.name)
                     turns = self.dict['tweets'][parent_id][turns] + 1
+                    # Add tweet to dictionary
                     self.dict['tweets'][status.id] = {
                         'author': status.author.name, 
                         'text': status.text, 
@@ -269,32 +260,38 @@ class IncomingTweets(tk.Frame):
                         'author_set': author_set, 
                         'turns': turns
                     }
+                    # Conversations are identified by their leaf, which carries the id for the entire convo
                     if parent_id in self.dict['leaves']:
+                        # If the parent was a preexisting leaf, it will be replaced by the new leaf
                         branch_id = self.dict['leaves'][parent_id]
                         self.dict['leaves'].pop(parent_id)
                     else:
+                        # Else we make a new id
                         self.last_branch_id += 1
                         branch_id = self.last_branch_id
-                    self.dict['leaves'][status.id] = branch_id
+                    self.dict['leaves'][leaf_id] = branch_id
+                    # Send the tweet to the tree queue, from where it will be added to the treeview
                     self.treeQueue.sendItem([str(branch_id)+'-'+str(turns-1), str(branch_id)+'-'+str(turns), status.text])
                     print("found one in dict")
                     return {'author_set': author_set, 'turns': turns, 'branch_id': branch_id}
                 else:
-                    #print("doesn't meet requirements")
-                    #print(total_author_set)
-                    #print(total_turns)
+                    # If requirements are not met, return False
                     return False
             else:
+                # Recursive case, if parent tweet is not already in dict
                 parent = self.api.api.get_status(parent_id)
                 total_author_set.add(status.author.name)
                 authors = len(total_author_set)
                 total_turns = total_turns + 1
                 if (authors <= 10 and total_turns <= 10):
-                    result = self.get_convo_stats(parent, total_author_set, total_turns)
+                    # Check if maximum requirements haven't already been exceeded
+                    result = self.process_convo(leaf_id, parent, total_author_set, total_turns)
                     if result:
+                        # If the recursive function doesn't return False, the conversation is valid
                         author_set = result['author_set']
                         author_set.add(status.author.name)
                         turns = result['turns'] + 1
+                        # Add tweet to dictionary
                         self.dict['tweets'][status.id] = {
                             'author': status.author.name, 
                             'text': status.text, 
@@ -303,20 +300,23 @@ class IncomingTweets(tk.Frame):
                             'turns': turns
                         }
                         branch_id = result['branch_id']
-                        #print("sending intermediate item")
-                        #print(status.text)
+                        # Send the tweet to the tree queue, from where it will be added to the treeview
                         self.treeQueue.sendItem([str(branch_id)+'-'+str(turns-1), str(branch_id)+'-'+str(turns), status.text])
                         return {'author_set': author_set, 'turns': turns, 'branch_id': branch_id}
                     else:
+                        # If recursive fuction returns False, so conversation is invalid
                         return False
                 else:
+                    # If maximum requirements exceeded, there's no point in continuing
                     return False
         else:
+            # If the tweet has no parent, we have reached the root of the conversation
             total_author_set.add(status.author.name)
             authors = len(total_author_set)
             total_turns = total_turns + 1
             if (authors > 1 and authors <= 10 and total_turns > 2 and total_turns <= 10):
-                #print("found one")
+                # Check if convo meets author and turn requirements
+                # Add tweet to dictionary
                 self.dict['tweets'][status.id] = {
                     'author': status.author.name, 
                     'text': status.text, 
@@ -324,31 +324,16 @@ class IncomingTweets(tk.Frame):
                     'author_set': {status.author.name}, 
                     'turns': 1
                 }
+                # Create new id for converstation and add it to leaves in dict
                 self.last_branch_id += 1
                 branch_id = self.last_branch_id
-                self.dict['leaves'][status.id] = branch_id
+                self.dict['leaves'][leaf_id] = branch_id
+                # Send the tweet to the tree queue, from where it will be added to the treeview
                 self.treeQueue.sendItem(['', str(branch_id)+'-'+str(1), status.text])
                 return {'author_set': {status.author.name}, 'turns': 1, 'branch_id': branch_id}
             else:
-                #print("doesn't meet requirements")
-                #print(total_author_set)
-                #print(total_turns)
+                # If convo doesn't meet requirements, return False
                 return False
-
-    def add_convo(self, status):
-        parent_id = status.in_reply_to_status_id
-        if (parent_id):
-            try:
-                self.dict[parent_id][children].append(status.id)
-            except:
-                parent = self.api.api.get_status(parent_id)
-                self.add_convo(parent)
-                self.dict[parent_id][children].append(status.id)
-            #self.tree.insert(parent_id, 'end', status.id, text=status.text)
-        else:
-            return (status.id in self.dict.keys())
-            #self.tree.insert('', 'end', status.id, text=status.text)
-        self.dict[status.id] = {'author': status.author.name, 'text': status.text, 'parent': parent_id, 'children': list()}
         
     def set_variables(self):
         self.api.set_var(self.langloc_string.get(), self.keyrad_string.get(), self.option_value.get())
