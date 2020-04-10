@@ -232,7 +232,7 @@ class IncomingTweets(tk.Frame):
         self.max_num_string = tk.StringVar()
         self.max_num_entry = tk.Entry(self, textvariable=self.max_num_string)
         self.max_num_string.set('10')
-        self.max_num_label = tk.Label(self, text='maximum number of participants')
+        self.max_num_label = tk.Label(self, text='Maximum number of participants')
         self.max_num_label.grid(column=4, row=1, sticky= 'nsw')
         self.max_num_entry.grid(column=4, row=2, sticky= 'nswe')
         
@@ -246,21 +246,21 @@ class IncomingTweets(tk.Frame):
         self.max_len_string = tk.StringVar()
         self.max_len_entry = tk.Entry(self, textvariable=self.max_len_string)
         self.max_len_string.set('10')
-        self.max_len_label = tk.Label(self, text='maximum length')
+        self.max_len_label = tk.Label(self, text='Maximum length')
         self.max_len_label.grid(column=4, row=3, sticky= 'nsw')
         self.max_len_entry.grid(column=4, row=4, sticky= 'nswe')
         
         self.tres_pos_string = tk.StringVar()
         self.tres_pos_entry = tk.Entry(self, textvariable=self.tres_pos_string)
         self.tres_pos_string.set('0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001')
-        self.tres_pos_label = tk.Label(self, text='list of positive tresholds')
+        self.tres_pos_label = tk.Label(self, text='List of positive tresholds')
         self.tres_pos_label.grid(column=3, row=5, sticky= 'nsw')
         self.tres_pos_entry.grid(column=3, row=6, sticky= 'nswe')
         
         self.tres_neg_string = tk.StringVar()
         self.tres_neg_entry = tk.Entry(self, textvariable=self.max_len_string)
         self.tres_neg_string.set('0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001')
-        self.tres_neg_label = tk.Label(self, text='list of negative tresholds')
+        self.tres_neg_label = tk.Label(self, text='List of negative tresholds')
         self.tres_neg_label.grid(column=4, row=5, sticky= 'nsw')
         self.tres_neg_entry.grid(column=4, row=6, sticky= 'nswe')
     
