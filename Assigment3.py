@@ -159,6 +159,7 @@ class IncomingTweets(tk.Frame):
         self.columnconfigure(2, weight=1)
         self.columnconfigure(3, weight=1)
         self.columnconfigure(4, weight=1)
+        self.rowconfigure(0, weight=1)
 
         # Make menubar
         self.menubar = tk.Menu(self)
@@ -264,7 +265,7 @@ class IncomingTweets(tk.Frame):
     
         # Input buttons
         self.filter_button = tk.Button(self, text = "Set filter", command = lambda: self.set_variables())
-        self.filter_button.grid(column=4, row=6, sticky = 'nse')
+        self.filter_button.grid(column=3, row=7, sticky = 'nsew', pady = 15, padx = 15)
     
     def save(self):
         ''' Saves current tweet dictionary to a .json file '''
