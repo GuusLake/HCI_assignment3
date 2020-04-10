@@ -154,11 +154,11 @@ class IncomingTweets(tk.Frame):
         self.last_branch_id = 0
         threading.Thread(target=self.check_tweet_queue, daemon=True).start()
         self.after(10, self.check_tree_queues)
-        self.columnconfigure(0, weight=2)
-        self.columnconfigure(1, weight=2)
+        self.columnconfigure(0, weight=3)
+        self.columnconfigure(1, weight=3)
         self.columnconfigure(2, weight=1)
-        self.columnconfigure(3, weight=2)
-        self.columnconfigure(4, weight=2)
+        self.columnconfigure(3, weight=3)
+        self.columnconfigure(4, weight=3)
         self.rowconfigure(0, weight=1)
 
         # Make menubar
@@ -208,9 +208,9 @@ class IncomingTweets(tk.Frame):
         
         # Buttons
         self.var_button = tk.Button(self, text = "Start stream", command = lambda: self.set_variables())
-        self.var_button.grid(column=0, row=7, sticky = 'nsew', pady = 15, padx = 15)
+        self.var_button.grid(column=1, row=7, sticky = 'nsew', pady = 15, padx = 15)
         self.stop_button = tk.Button(self, text = "Stop stream", command = lambda: self.stop_stream())
-        self.stop_button.grid(column=1, row=7, sticky = 'nsew', pady = 15, padx = 15)
+        self.stop_button.grid(column=0, row=7, sticky = 'nsew', pady = 15, padx = 15)
         
         ## Second Frame
         
@@ -232,13 +232,13 @@ class IncomingTweets(tk.Frame):
         self.max_num_string = tk.StringVar()
         self.max_num_entry = tk.Entry(self, textvariable=self.max_num_string)
         self.max_num_string.set('10')
-        self.max_num_label = tk.Label(self, text='maximum number of participants')
+        self.max_num_label = tk.Label(self, text='Maximum number of participants')
         self.max_num_label.grid(column=4, row=1, sticky= 'nsw')
         self.max_num_entry.grid(column=4, row=2, sticky= 'nswe')
         
         self.min_len_string = tk.StringVar()
         self.min_len_entry = tk.Entry(self, textvariable=self.min_len_string)
-        self.min_len_string.set('2')
+        self.min_len_string.set('3')
         self.min_len_label = tk.Label(self, text='Minimum length')
         self.min_len_label.grid(column=3, row=3, sticky= 'nsw')
         self.min_len_entry.grid(column=3, row=4, sticky= 'nswe')
@@ -246,21 +246,21 @@ class IncomingTweets(tk.Frame):
         self.max_len_string = tk.StringVar()
         self.max_len_entry = tk.Entry(self, textvariable=self.max_len_string)
         self.max_len_string.set('10')
-        self.max_len_label = tk.Label(self, text='maximum length')
+        self.max_len_label = tk.Label(self, text='Maximum length')
         self.max_len_label.grid(column=4, row=3, sticky= 'nsw')
         self.max_len_entry.grid(column=4, row=4, sticky= 'nswe')
         
         self.tres_pos_string = tk.StringVar()
         self.tres_pos_entry = tk.Entry(self, textvariable=self.tres_pos_string)
-        self.tres_pos_string.set('2')
-        self.tres_pos_label = tk.Label(self, text='list of positive tresholds')
+        self.tres_pos_string.set('0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001')
+        self.tres_pos_label = tk.Label(self, text='List of positive tresholds')
         self.tres_pos_label.grid(column=3, row=5, sticky= 'nsw')
         self.tres_pos_entry.grid(column=3, row=6, sticky= 'nswe')
         
         self.tres_neg_string = tk.StringVar()
         self.tres_neg_entry = tk.Entry(self, textvariable=self.max_len_string)
-        self.tres_neg_string.set('10')
-        self.tres_neg_label = tk.Label(self, text='list of negative tresholds')
+        self.tres_neg_string.set('0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001')
+        self.tres_neg_label = tk.Label(self, text='List of negative tresholds')
         self.tres_neg_label.grid(column=4, row=5, sticky= 'nsw')
         self.tres_neg_entry.grid(column=4, row=6, sticky= 'nswe')
     
