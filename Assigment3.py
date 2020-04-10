@@ -291,15 +291,55 @@ class IncomingTweets(tk.Frame):
         ''' Compares all conversations to the current filters and shows them if valid'''
         # Clear the second treeview of old items
         self.tree_two.delete(*self.tree_two.get_children())
-        # Get values from the filter inputs
-        min_num = int(self.min_num_string.get())
-        max_num = int(self.max_num_string.get())
-        min_len = int(self.min_len_string.get())
-        max_len = int(self.max_len_string.get())
+        # Get values from the filter inputs and check their validity
+        try:
+            min_num = int(self.min_num_string.get())
+            if min_num < 2 or min_num > 10:
+                messagebox.showerror('Error: Invalid Filter Value', "Minimum number of participants must be between 2 and 10. Adjust this value and try again.")
+                return
+        except:
+            messagebox.showerror('Error: Invalid Filter Value', "Minimum number of participants must be numerical. Adjust this value and try again.")
+            return
+        try:
+            max_num = int(self.max_num_string.get())
+            if max_num < 2 or min_num > 10:
+                messagebox.showerror('Error: Invalid Filter Value', "Maximum number of participants must be between 2 and 10. Adjust this value and try again.")
+                return
+            if min_num > max_num:
+                messagebox.showerror('Error: Invalid Filter Value', "Minimum number of participants can't be greater than maximum number of participants. Adjust these values and try again.")
+        except:
+            messagebox.showerror('Error: Invalid Filter Value', "Maximum number of participants must be numerical. Adjust this value and try again.")
+            return
+        try:
+            min_len = int(self.min_len_string.get())
+            if min_len < 3 or min_len > 10:
+                messagebox.showerror('Error: Invalid Filter Value', "Minimum conversation length must be between 3 and 10. Adjust this value and try again.")
+                return
+        except:
+            messagebox.showerror('Error: Invalid Filter Value', "Minimum conversation length must be numerical. Adjust this value and try again.")
+            return
+        try:
+            max_len = int(self.max_len_string.get())
+            if max_len < 3 or max_len > 10:
+                messagebox.showerror('Error: Invalid Filter Value', "Maximum conversation length must be between 3 and 10. Adjust this value and try again.")
+                return
+            if min_len > max_len:
+                messagebox.showerror('Error: Invalid Filter Value', "Minimum conversation length can't be greater than Maximum conversation length. Adjust these values and try again.")
+        except:
+            messagebox.showerror('Error: Invalid Filter Value', "Maximum conversation length must be numerical. Adjust this value and try again.")
+            return
         tres_pos_str = self.tres_pos_string.get()
-        tres_pos = [float(i) for i in tres_pos_str.split(', ')]
+        try:
+            tres_pos = [float(i) for i in tres_pos_str.split(', ')]
+        except:
+            messagebox.showerror('Error: Invalid Filter Value', "Positive tresholds must be numerical. Adjust this value and try again.")
+            return
         tres_neg_str = self.tres_neg_string.get()
-        tres_neg = [float(i) for i in tres_neg_str.split(', ')]
+        try:
+            tres_neg = [float(i) for i in tres_neg_str.split(', ')]
+        except:
+            messagebox.showerror('Error: Invalid Filter Value', "Negative tresholds must be numerical. Adjust this value and try again.")
+            return
         for leaf in self.loaded['leaves']:
             # Every leaf corresponds to a conversation
             num = len(self.loaded['tweets'][str(leaf)]['author_set'])
@@ -310,6 +350,13 @@ class IncomingTweets(tk.Frame):
                 # Check the single variable requirements
                 requirements_met = True
                 for i in range(leng):
+                    # Check validity of list inputs
+                    if tres_pos[i] < 0 or tres_pos[i] > 1:
+                        messagebox.showerror('Error: Invalid Filter Value', "Positive tresholds must be between 0 and 1. Adjust this value and try again.")
+                        return
+                    if tres_neg[i] < 0 or tres_neg[i] > 1:
+                        messagebox.showerror('Error: Invalid Filter Value', "Negative tresholds must be between 0 and 1. Adjust this value and try again.")
+                        return
                     # Check list requirements
                     if not (pos[i] >= tres_pos[i] and neg[i] >= tres_neg[i]):
                         requirements_met = False
@@ -400,7 +447,7 @@ class IncomingTweets(tk.Frame):
             time.sleep(0.01)
     
     def process_convo(self, leaf_id, status, total_author_set, total_turns):
-        ''' Recursively traces a converation to its root, checks turn and author count, and adds it if valid '''
+        ''' Recursively traces a conversation to its root, checks turn and author count, and adds it if valid '''
         parent_id = status.in_reply_to_status_id  
         if (parent_id):
             # If tweets has a parent, we haven't reached the root yet
