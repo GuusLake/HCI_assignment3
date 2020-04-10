@@ -265,27 +265,72 @@ class IncomingTweets(tk.Frame):
         self.tres_neg_entry.grid(column=4, row=6, sticky= 'nswe')
     
         # Input buttons
-        self.filter_button = tk.Button(self, text = "Set filter", command = lambda: self.set_variables())
+        self.filter_button = tk.Button(self, text = "Set filter", command = lambda: self.load("en, nl-corona 1.json"))
         self.filter_button.grid(column=4, row=7, sticky = 'nsew', pady = 15, padx = 15)
     
     def save(self):
+        ''' Saves current tweet dictionary to a .json file '''
         f = open(self.langloc_string.get()+"-"+self.keyrad_string.get()+" "+str(self.option_value.get())+".json", 'w')
         json_string = json.dumps(self.dict)
         f.write(json_string)
         f.close()
         
     def load(self, filename):
+        ''' Loads a tweet dictionary from a .json file '''
         f = open(filename, 'r')
-        self.loaded = json.load(f) # DOES THIS WORK?
+        self.loaded = json.load(f)
+        f.close()
         for leaf in self.loaded['leaves']:
+            # Get sentiment array for each conversation
             self.sentiment[leaf] = self.get_sentiment(leaf)
         print(self.sentiment)
+        self.filter()
+        
+    def filter(self):
+        self.tree_two.delete(*self.tree_two.get_children())
+        min_num = int(self.min_num_string.get())
+        max_num = int(self.max_num_string.get())
+        min_len = int(self.min_len_string.get())
+        max_len = int(self.max_len_string.get())
+        tres_pos_str = self.tres_pos_string.get()
+        tres_pos = [float(i) for i in tres_pos_str.split(', ')]
+        tres_neg_str = self.tres_neg_string.get()
+        tres_neg = [float(i) for i in tres_neg_str.split(', ')]
+        for leaf in self.loaded['leaves']:
+            num = len(self.loaded['tweets'][str(leaf)]['author_set'])
+            leng = self.loaded['tweets'][str(leaf)]['turns']
+            pos = [i['pos'] for i in self.sentiment[leaf]]
+            neg = [i['neg'] for i in self.sentiment[leaf]]
+            if num >= min_num and num <= max_num and leng >= min_len and leng <= max_len:
+                print("requirements part 1 success")
+                requirements_met = True
+                for i in range(leng):
+                    if not (pos[i] >= tres_pos[i] and neg[i] >= tres_neg[i]):
+                        requirements_met = False
+                if requirements_met:
+                    print("requirements part 2 success")
+                    self.show_convo(leaf, self.loaded['leaves'][str(leaf)])
+                    
+    def show_convo(self, tweet_id, branch_id):
+        parent_id = self.loaded['tweets'][str(tweet_id)]['parent']
+        turns = self.loaded['tweets'][str(tweet_id)]['turns']
+        text = self.loaded['tweets'][str(tweet_id)]['text']
+        if parent_id:
+            # Recursive case
+            self.show_convo(parent_id, branch_id)
+            self.treeQueueTwo.sendItem([str(branch_id)+'-'+str(turns-1), str(branch_id)+'-'+str(turns), text])
+        else:
+            # Reached root tweet
+            self.treeQueueTwo.sendItem(['', str(branch_id)+'-'+str(turns), text])
             
     def get_sentiment(self, tweet_id):
+        ''' Recursively get sentiment analysis of every tweet in conversation '''
         parent_id = self.loaded['tweets'][str(tweet_id)]['parent']
         if parent_id:
+            # Recursive case
             sentiments = self.get_sentiment(parent_id)
         else:
+            # Base case
             sentiments = list()
         ss = self.sid.polarity_scores(self.loaded['tweets'][str(tweet_id)]['text'])
         sentiments.append({'pos': ss['pos'], 'neg': ss['neg']})
@@ -325,10 +370,14 @@ class IncomingTweets(tk.Frame):
             parent, id, text = self.treeQueueTwo.getNextItem()
             try:
                 # Try to insert item into tree
-                self.tree_one.insert(parent, 'end', id, text=text)
+                print("recieved tree two item")
+                print(parent)
+                print(id)
+                print(text)
+                self.tree_two.insert(parent, 'end', id, text=text)
             except:
                 # Sometimes the text isn't compatible with treeview, eg. some emojis
-                self.tree_one.insert(parent, 'end', id, text="TWEET CANNOT BE DISPLAYED")
+                self.tree_two.insert(parent, 'end', id, text="TWEET CANNOT BE DISPLAYED")
         except: pass
         self.after(10, self.check_tree_queues)
         
