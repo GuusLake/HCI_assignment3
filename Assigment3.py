@@ -130,7 +130,7 @@ class Credentials():
             except:
                 messagebox.showerror('Error: Location not found', 'The given location has not been found. The program will continue to use the old variables')
         else:
-            if streamtype == 1:
+            if stream_type == 1:
                 messagebox.showerror('Error: No input', 'Twitter requires us to give a search term, please enter one. The program will continue to use the old variables')
             else:
                 if not(key_Rad):
@@ -169,6 +169,15 @@ class IncomingTweets(tk.Frame):
         self.menubar.add_cascade(label="Account", menu=self.accountmenu)
         self.parent.config(menu=self.menubar)
         
+        ## First Frame
+        
+        # Treeview with conversations
+        self.tree = ttk.Treeview(self)
+        self.yscrollbarTree = ttk.Scrollbar(self, orient='vertical', command=self.tree.yview)
+        self.tree.configure(yscrollcommand=self.yscrollbarTree.set)
+        self.yscrollbarTree.grid(row=0, column=1, sticky='nse')
+        self.tree.grid(column=0, row=0, columnspan=3, sticky= 'nsew')
+        
         # Input fields and buttons
         self.langloc_string = tk.StringVar()
         self.langloc_entry = tk.Entry(self, textvariable=self.langloc_string)
@@ -194,8 +203,13 @@ class IncomingTweets(tk.Frame):
         self.option2.grid(column=0, row=6, sticky= 'nsw')
         
         self.var_button = tk.Button(self, text = "Start stream", command = lambda: self.set_variables())
-        self.var_button.grid(column=1, row=5, rowspan =2, sticky = 'nse', padx=15, pady=15)
+        self.var_button.grid(column=1, row=5, sticky = 'nse')
+        self.stop_button = tk.Button(self, text = "Stop stream", command = lambda: self.stop_stream())
+        self.stop_button.grid(column=1, row=6, sticky = 'nse')
         
+        # Second Frame
+        
+
         # Treeviews with conversations
         self.tree_one = ttk.Treeview(self)
         self.yscrollbarTreeOne = ttk.Scrollbar(self, orient='vertical', command=self.tree_one.yview)
@@ -231,7 +245,6 @@ class IncomingTweets(tk.Frame):
         ss = self.sid.polarity_scores(self.loaded['tweets'][str(tweet_id)]['text'])
         sentiments.append({'pos': ss['pos'], 'neg': ss['neg']})
         return sentiments
-        
 
     def set_lan_key(self):
         self.old_loc = self.langloc_string.get()
@@ -395,8 +408,12 @@ class IncomingTweets(tk.Frame):
         
     def set_variables(self):
         self.api.set_var(self.langloc_string.get(), self.keyrad_string.get(), self.option_value.get())
-        self.var_button['text'] = 'Set variables'
+        self.var_button['text'] = 'Change variables'
         
+    def stop_stream(self):
+        self.api.stream.disconnect()
+        self.var_button['text'] = 'Start stream'
+    
     def quit_program(self):
         self.api.stream.disconnect()
         exit()
