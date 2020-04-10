@@ -218,7 +218,7 @@ class IncomingTweets(tk.Frame):
         self.yscrollbarTreeTwo = ttk.Scrollbar(self, orient='vertical', command=self.tree_two.yview)
         self.tree_two.configure(yscrollcommand=self.yscrollbarTreeTwo.set)
         self.yscrollbarTreeTwo.grid(row=0, column=3, sticky='nse')
-        self.tree_two.grid(column=2, row=0, columnspan = 3, sticky= 'nsew')
+        self.tree_two.grid(column=2, row=0, columnspan = 2, sticky= 'nsew')
         
         # Input fields
         self.min_num_string = tk.StringVar()
